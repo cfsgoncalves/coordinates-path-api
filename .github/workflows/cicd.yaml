@@ -1,0 +1,28 @@
+name: Run tests with database
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: turn up the needed containers
+      run: docker-compose up --build -d postgres cache
+
+    - name: buffering time for upping the containers
+      uses: jakejarvis/wait-action@master
+      with:
+        time: '30s'
+
+    - uses: actions/checkout@v2
+    - name: run tests
+      run: docker-compose up --build -d tests
+
+
+
