@@ -7,8 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func HTTPRouteEndpoints(router *gin.Engine, system *usecase.SystemMonitoring, distributionApi *apiHandlers.DistributionAPI, truckApi *apiHandlers.TruckAPI) *gin.Engine {
+func HTTPRouteEndpoints(router *gin.Engine, system *usecase.SystemMonitoring, distributionApi *apiHandlers.DistributionAPI, truckApi *apiHandlers.TruckAPI, orderApi *apiHandlers.OrdersAPI) *gin.Engine {
 	router.POST("/v1/truck", truckApi.AddNewTruck)
+	router.POST("/v1/order", orderApi.AddNewOrder)
 	router.POST("/v1/assignToTruck", truckApi.AssignOrdersToTruck)
 	router.GET("/v1/getBestPath/:truckPlate", distributionApi.GetBestPath)
 	router.PATCH("/v1/getBestPath/:truckPlate", distributionApi.UpdateShippingOrder)

@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.26.0
 
-package entities
+package sqlcgen
 
 import (
 	"context"

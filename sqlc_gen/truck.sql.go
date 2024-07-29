@@ -3,7 +3,7 @@
 //   sqlc v1.26.0
 // source: truck.sql
 
-package entities
+package sqlcgen
 
 import (
 	"context"
@@ -22,7 +22,7 @@ RETURNING plate, max_weight
 
 type CreateTruckParams struct {
 	Plate     string
-	MaxWeight pgtype.Numeric
+	MaxWeight pgtype.Int4
 }
 
 func (q *Queries) CreateTruck(ctx context.Context, arg CreateTruckParams) (Truck, error) {

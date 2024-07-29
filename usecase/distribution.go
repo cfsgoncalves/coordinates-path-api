@@ -3,9 +3,9 @@ package usecase
 import (
 	"fmt"
 	"meight/configuration"
-	"meight/entities"
 	repository "meight/repository/implementation"
 	repositoryInterface "meight/repository/interfaces"
+	sqlcgen "meight/sqlc_gen"
 	"net/http"
 	"time"
 )
@@ -24,8 +24,8 @@ func NewDistribution(database repository.DBAccess, cache repositoryInterface.Cac
 	return &Distribution{Database: database, Cache: cache, HttpC: client}
 }
 
-func (d *Distribution) GetBestPath(truckPlate string) ([]entities.Order, error) {
-	return []entities.Order{}, nil
+func (d *Distribution) GetBestPath(truckPlate string) ([]sqlcgen.Order, error) {
+	return []sqlcgen.Order{}, nil
 }
 
 // Aux method to get the best path

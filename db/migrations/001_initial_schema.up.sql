@@ -2,9 +2,9 @@
 
 CREATE TABLE public.orders (
 	id bigserial NOT NULL,
-	weight numeric NULL,
-	latitude numeric NULL,
-	longitude numeric NULL,
+	weight int NULL,
+	latitude float NULL,
+	longitude float NULL,
 	description text NULL,
 	CONSTRAINT orders_pkey PRIMARY KEY (id)
 );
@@ -13,7 +13,7 @@ CREATE TABLE public.orders (
 
 CREATE TABLE public.trucks (
 	plate text NOT NULL,
-	max_weight numeric NULL,
+	max_weight int NULL,
 	CONSTRAINT trucks_pkey PRIMARY KEY (plate)
 );
 

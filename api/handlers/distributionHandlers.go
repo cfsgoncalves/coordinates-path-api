@@ -1,8 +1,9 @@
 package api
 
 import (
-	"meight/entities"
+	repositoryImpl "meight/repository/implementation"
 	repository "meight/repository/interfaces"
+	sqlcgen "meight/sqlc_gen"
 	"meight/usecase"
 	"net/http"
 
@@ -14,8 +15,8 @@ type DistributionAPI struct {
 	Distribution usecase.Distribution
 }
 
-func NewDistributionApi(cache repository.Cache, database repository.Database) *DistributionAPI {
-	return &DistributionAPI{Distribution: usecase.Distribution{Cache: cache}}
+func NewDistributionApi(cache repository.Cache, database repositoryImpl.DBAccess) *DistributionAPI {
+	return &DistributionAPI{Distribution: *usecase.NewDistribution(database, cache)}
 }
 
 func (D *DistributionAPI) GetBestPath(c *gin.Context) {
@@ -36,7 +37,7 @@ func (D *DistributionAPI) GetBestPath(c *gin.Context) {
 }
 
 func (D *DistributionAPI) UpdateShippingOrder(c *gin.Context) {
-	request := entities.OrderTruck{}
+	request := sqlcgen.OrderTruck{}
 
 	if err := c.BindJSON(&request); err != nil {
 		log.Error().Msgf("Bad Request. Could not BindJson to struct")

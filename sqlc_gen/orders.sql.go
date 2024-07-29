@@ -3,11 +3,47 @@
 //   sqlc v1.26.0
 // source: orders.sql
 
-package entities
+package sqlcgen
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const createOrder = `-- name: CreateOrder :one
+INSERT INTO orders (
+  weight, latitude, longitude, description
+) VALUES (
+  $1, $2, $3, $4
+)
+RETURNING id, weight, latitude, longitude, description
+`
+
+type CreateOrderParams struct {
+	Weight      pgtype.Int4
+	Latitude    pgtype.Float8
+	Longitude   pgtype.Float8
+	Description pgtype.Text
+}
+
+func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error) {
+	row := q.db.QueryRow(ctx, createOrder,
+		arg.Weight,
+		arg.Latitude,
+		arg.Longitude,
+		arg.Description,
+	)
+	var i Order
+	err := row.Scan(
+		&i.ID,
+		&i.Weight,
+		&i.Latitude,
+		&i.Longitude,
+		&i.Description,
+	)
+	return i, err
+}
 
 const listOrders = `-- name: ListOrders :many
 SELECT id, weight, latitude, longitude, description FROM orders

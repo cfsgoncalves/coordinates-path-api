@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.26.0
 
-package entities
+package sqlcgen
 
 import (
 	"github.com/jackc/pgx/v5/pgtype"
@@ -10,9 +10,9 @@ import (
 
 type Order struct {
 	ID          int64
-	Weight      pgtype.Numeric
-	Latitude    pgtype.Numeric
-	Longitude   pgtype.Numeric
+	Weight      pgtype.Int4
+	Latitude    pgtype.Float8
+	Longitude   pgtype.Float8
 	Description pgtype.Text
 }
 
@@ -25,5 +25,5 @@ type OrderTruck struct {
 
 type Truck struct {
 	Plate     string
-	MaxWeight pgtype.Numeric
+	MaxWeight pgtype.Int4
 }

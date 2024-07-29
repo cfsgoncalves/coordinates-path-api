@@ -3,7 +3,7 @@
 //   sqlc v1.26.0
 // source: order_trucks.sql
 
-package entities
+package sqlcgen
 
 import (
 	"context"

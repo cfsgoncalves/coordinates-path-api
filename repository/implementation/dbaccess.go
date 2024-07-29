@@ -1,32 +1,55 @@
-package entities
+package repository
 
 import (
 	"context"
 	"embed"
 	"fmt"
+	"meight/configuration"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 )
 
-func NewDBAccess(connectionString string) (*pgx.Conn, error) {
+type DBAccess struct {
+	ConnectionPool   *pgxpool.Pool
+	ConnectionString string
+}
+
+func NewDBAccess() (*DBAccess, error) {
+
 	ctx := context.Background()
 
+	pgUsername := configuration.GetEnvAsString("DB_USERNAME", "")
+	pgPassword := configuration.GetEnvAsString("DB_PASSWORD", "")
+	host := configuration.GetEnvAsString("DB_HOST", "")
+	port := configuration.GetEnvAsInt("DB_PORT", 5432)
+	db := configuration.GetEnvAsString("DB_NAME", "")
+
+	connectionString := fmt.Sprintf("%s:%s@%s:%d/%s?sslmode=disable", pgUsername, pgPassword, host, port, db)
+
 	url := fmt.Sprintf("postgres://" + connectionString)
-	conn, err := pgx.Connect(ctx, url)
+
+	connPool, err := pgxpool.New(ctx, url)
+
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close(ctx)
 
-	return conn, nil
+	err = connPool.Ping(ctx)
+
+	if err != nil {
+		log.Error().Msgf("NewDBAccess(): Can't connect to the database")
+		return nil, err
+	}
+
+	return &DBAccess{ConnectionPool: connPool, ConnectionString: connectionString}, nil
 }
 
-func MigrateDB(connectionString string, migrationsFS embed.FS) error {
+func (dB *DBAccess) MigrateDB(migrationsFS embed.FS) error {
 	log.Debug().Msg("MigrateDB: Start executing the migration system")
 
 	d, err := iofs.New(migrationsFS, "db/migrations")
@@ -34,7 +57,7 @@ func MigrateDB(connectionString string, migrationsFS embed.FS) error {
 		return err
 	}
 
-	m, err := migrate.NewWithSourceInstance("iofs", d, "postgres://"+connectionString)
+	m, err := migrate.NewWithSourceInstance("iofs", d, "postgres://"+dB.ConnectionString)
 	if err != nil {
 		log.Error().Msgf("MigrateDB():%s", err)
 		return err

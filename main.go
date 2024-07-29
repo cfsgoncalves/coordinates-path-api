@@ -21,6 +21,7 @@ func main() {
 
 	if err != nil {
 		log.Error().Msgf("main(): Error trying to access database")
+		return
 	}
 
 	err = newDb.MigrateDB(migrationsFS)
@@ -32,10 +33,11 @@ func main() {
 
 	cache := repositoryImpl.NewRedis()
 	system := usecase.NewSystemMonitoring(cache)
-	truckHandlers := apiHandlers.NewTruckApi(cache, newDb)
-	distributionHandlers := apiHandlers.NewDistributionApi(cache, newDb)
+	truckHandlers := apiHandlers.NewTruckApi(cache, *newDb)
+	distributionHandlers := apiHandlers.NewDistributionApi(cache, *newDb)
+	orderHandlers := apiHandlers.NewOrdersApi(cache, *newDb)
 
-	api.HTTPRouteEndpoints(router, system, distributionHandlers, truckHandlers)
+	api.HTTPRouteEndpoints(router, system, distributionHandlers, truckHandlers, orderHandlers)
 
 	router.Run(":8080")
 
