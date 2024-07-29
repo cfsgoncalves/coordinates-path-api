@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	repositoryImpl "meight/repository/implementation"
 	repository "meight/repository/interfaces"
 	sqlcgen "meight/sqlc_gen"
@@ -19,15 +20,13 @@ func NewDistributionApi(cache repository.Cache, database repositoryImpl.DBAccess
 	return &DistributionAPI{Distribution: *usecase.NewDistribution(database, cache)}
 }
 
-func (D *DistributionAPI) GetBestPath(c *gin.Context) {
-	value, exists := c.Get("truckPlate")
+func (d *DistributionAPI) GetBestPath(c *gin.Context) {
+	value, _ := c.Params.Get("truckPlate")
+	date, _ := c.Params.Get("date")
 
-	if !exists {
-		log.Error().Msgf("Bad Request. Variable truckPlate does not exists")
-		c.Status(http.StatusBadRequest)
-	}
+	//Add validation for date format
 
-	entitiesOrders, err := D.Distribution.GetBestPath(value.(string))
+	entitiesOrders, err := d.Distribution.GetBestPath(value, date)
 
 	if err != nil {
 		log.Error().Msgf("GetBestPath yield error. Error: %s", err)
@@ -36,12 +35,47 @@ func (D *DistributionAPI) GetBestPath(c *gin.Context) {
 	c.JSON(http.StatusOK, entitiesOrders)
 }
 
-func (D *DistributionAPI) UpdateShippingOrder(c *gin.Context) {
+func (d *DistributionAPI) UpdateShippingOrder(c *gin.Context) {
+	value, _ := c.Params.Get("truckPlate")
+	date, _ := c.Params.Get("date")
+
 	request := sqlcgen.OrderTruck{}
 
 	if err := c.BindJSON(&request); err != nil {
 		log.Error().Msgf("Bad Request. Could not BindJson to struct")
 		c.Status(http.StatusBadRequest)
+		return
 	}
 
+	err := d.Distribution.UpdateShippingOrder(value, date, request.OrderStatus)
+
+	if err != nil {
+		log.Error().Msgf("Error UpdateShippingOrder yield error %s", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, fmt.Sprintf("{ Error: %s}", err))
+		return
+	}
+}
+
+func (d *DistributionAPI) AssignOrdersToTruck(c *gin.Context) {
+	value, _ := c.Params.Get("truckPlate")
+	request := []sqlcgen.OrderTruck{}
+
+	if err := c.BindJSON(&request); err != nil {
+		log.Error().Msgf("Bad Request. Could not BindJson to struct")
+		c.AbortWithStatusJSON(http.StatusBadRequest, fmt.Sprintf("{ Error: %s}", "Could not BindJson to struct"))
+		return
+	}
+
+	err := d.Distribution.AssignOrdersToTruck(value, request)
+
+	if err != nil {
+		log.Error().Msgf("Error AssigningOrdersToTruc yield error %s", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, fmt.Sprintf("{ Error: %s}", err))
+		return
+	}
+
+}
+
+func (d *DistributionAPI) GetOrderFromTruck(c *gin.Context) {
+	//Get orders from truck where status != delivered
 }

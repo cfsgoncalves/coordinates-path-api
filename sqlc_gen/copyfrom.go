@@ -33,6 +33,7 @@ func (r iteratorForCreateOrderTrucks) Values() ([]interface{}, error) {
 		r.rows[0].OrderID,
 		r.rows[0].TruckPlate,
 		r.rows[0].OrderSequence,
+		r.rows[0].OrderStatus,
 	}, nil
 }
 
@@ -41,5 +42,5 @@ func (r iteratorForCreateOrderTrucks) Err() error {
 }
 
 func (q *Queries) CreateOrderTrucks(ctx context.Context, arg []CreateOrderTrucksParams) (int64, error) {
-	return q.db.CopyFrom(ctx, []string{"order_trucks"}, []string{"date", "order_id", "truck_plate", "order_sequence"}, &iteratorForCreateOrderTrucks{rows: arg})
+	return q.db.CopyFrom(ctx, []string{"order_trucks"}, []string{"date", "order_id", "truck_plate", "order_sequence", "order_status"}, &iteratorForCreateOrderTrucks{rows: arg})
 }

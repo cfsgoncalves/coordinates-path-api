@@ -34,7 +34,3 @@ func (t *TruckAPI) AddNewTruck(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 }
-
-func (t *TruckAPI) AssignOrdersToTruck(c *gin.Context) {
-
-}

@@ -23,7 +23,8 @@ CREATE TABLE public.order_trucks (
 	"date" text NOT NULL,
 	order_id bigserial NOT NULL,
 	truck_plate text NULL,
-	order_sequence int8 NULL,
+	order_sequence int NULL,
+	order_status text NOT NULL, 
 	CONSTRAINT order_trucks_pkey PRIMARY KEY (date, order_id, truck_plate)
 );
 

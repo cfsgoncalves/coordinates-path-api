@@ -15,12 +15,13 @@ type CreateOrderTrucksParams struct {
 	Date          string
 	OrderID       int64
 	TruckPlate    string
-	OrderSequence pgtype.Int8
+	OrderSequence pgtype.Int4
+	OrderStatus   string
 }
 
 const listOrderTrucksByPlateAndDate = `-- name: ListOrderTrucksByPlateAndDate :many
-SELECT date, order_id, truck_plate, order_sequence FROM order_trucks
-WHERE truck_plate = $1 AND "date" = $2
+SELECT date, order_id, truck_plate, latitude, longitude FROM order_trucks, orders
+WHERE truck_plate = $1 AND "date" = $2 AND orders.id = order_trucks.order_id
 ORDER BY date
 `
 
@@ -29,8 +30,54 @@ type ListOrderTrucksByPlateAndDateParams struct {
 	Date       string
 }
 
-func (q *Queries) ListOrderTrucksByPlateAndDate(ctx context.Context, arg ListOrderTrucksByPlateAndDateParams) ([]OrderTruck, error) {
+type ListOrderTrucksByPlateAndDateRow struct {
+	Date       string
+	OrderID    int64
+	TruckPlate string
+	Latitude   pgtype.Float8
+	Longitude  pgtype.Float8
+}
+
+func (q *Queries) ListOrderTrucksByPlateAndDate(ctx context.Context, arg ListOrderTrucksByPlateAndDateParams) ([]ListOrderTrucksByPlateAndDateRow, error) {
 	rows, err := q.db.Query(ctx, listOrderTrucksByPlateAndDate, arg.TruckPlate, arg.Date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListOrderTrucksByPlateAndDateRow
+	for rows.Next() {
+		var i ListOrderTrucksByPlateAndDateRow
+		if err := rows.Scan(
+			&i.Date,
+			&i.OrderID,
+			&i.TruckPlate,
+			&i.Latitude,
+			&i.Longitude,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listOrderTrucksByPlateAndDateAndOrderStatus = `-- name: ListOrderTrucksByPlateAndDateAndOrderStatus :many
+SELECT date, order_id, truck_plate, order_sequence, order_status FROM order_trucks
+WHERE truck_plate = $1 AND "date" = $2 AND order_status = $3
+ORDER BY date
+`
+
+type ListOrderTrucksByPlateAndDateAndOrderStatusParams struct {
+	TruckPlate  string
+	Date        string
+	OrderStatus string
+}
+
+func (q *Queries) ListOrderTrucksByPlateAndDateAndOrderStatus(ctx context.Context, arg ListOrderTrucksByPlateAndDateAndOrderStatusParams) ([]OrderTruck, error) {
+	rows, err := q.db.Query(ctx, listOrderTrucksByPlateAndDateAndOrderStatus, arg.TruckPlate, arg.Date, arg.OrderStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -43,6 +90,7 @@ func (q *Queries) ListOrderTrucksByPlateAndDate(ctx context.Context, arg ListOrd
 			&i.OrderID,
 			&i.TruckPlate,
 			&i.OrderSequence,
+			&i.OrderStatus,
 		); err != nil {
 			return nil, err
 		}
@@ -52,4 +100,54 @@ func (q *Queries) ListOrderTrucksByPlateAndDate(ctx context.Context, arg ListOrd
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateOrderTruckStatus = `-- name: UpdateOrderTruckStatus :exec
+UPDATE order_trucks SET order_status=$1 WHERE date=$2 AND order_id=$3 AND truck_plate=$4
+`
+
+type UpdateOrderTruckStatusParams struct {
+	OrderStatus string
+	Date        string
+	OrderID     int64
+	TruckPlate  string
+}
+
+func (q *Queries) UpdateOrderTruckStatus(ctx context.Context, arg UpdateOrderTruckStatusParams) error {
+	_, err := q.db.Exec(ctx, updateOrderTruckStatus,
+		arg.OrderStatus,
+		arg.Date,
+		arg.OrderID,
+		arg.TruckPlate,
+	)
+	return err
+}
+
+const updateOrderTrucks = `-- name: UpdateOrderTrucks :one
+UPDATE order_trucks SET order_sequence=$1 WHERE date=$2 AND order_id=$3 AND truck_plate=$4 RETURNING date, order_id, truck_plate, order_sequence, order_status
+`
+
+type UpdateOrderTrucksParams struct {
+	OrderSequence pgtype.Int4
+	Date          string
+	OrderID       int64
+	TruckPlate    string
+}
+
+func (q *Queries) UpdateOrderTrucks(ctx context.Context, arg UpdateOrderTrucksParams) (OrderTruck, error) {
+	row := q.db.QueryRow(ctx, updateOrderTrucks,
+		arg.OrderSequence,
+		arg.Date,
+		arg.OrderID,
+		arg.TruckPlate,
+	)
+	var i OrderTruck
+	err := row.Scan(
+		&i.Date,
+		&i.OrderID,
+		&i.TruckPlate,
+		&i.OrderSequence,
+		&i.OrderStatus,
+	)
+	return i, err
 }

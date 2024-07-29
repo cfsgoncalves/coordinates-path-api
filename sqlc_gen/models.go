@@ -20,7 +20,8 @@ type OrderTruck struct {
 	Date          string
 	OrderID       int64
 	TruckPlate    string
-	OrderSequence pgtype.Int8
+	OrderSequence pgtype.Int4
+	OrderStatus   string
 }
 
 type Truck struct {
