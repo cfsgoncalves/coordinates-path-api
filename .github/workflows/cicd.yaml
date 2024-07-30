@@ -6,23 +6,28 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
   tests:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: turn up the needed containers
-      run: docker-compose up --build -d postgres cache
+      run: docker-compose up --build -d postgres redis kafka
 
-    - name: buffering time for upping the containers
-      uses: jakejarvis/wait-action@master
-      with:
-        time: '30s'
+    - name: wait until kafka is healthy
+      run: timeout 60s sh -c 'until docker ps | grep kafka | grep -q healthy; do echo "Waiting for container to be healthy..."; sleep 2; done'
 
-    - uses: actions/checkout@v2
+    - name: wait until redis is healthy
+      run: timeout 60s sh -c 'until docker ps | grep redis | grep -q healthy; do echo "Waiting for container to be healthy..."; sleep 2; done'
+
+    - name: wait until postgres is healthy
+      run: timeout 60s sh -c 'until docker ps | grep postgres | grep -q healthy; do echo "Waiting for container to be healthy..."; sleep 2; done'
+          
     - name: run tests
-      run: docker-compose up --build -d tests
+      run: |
+        go test ./...
+
 
 
 

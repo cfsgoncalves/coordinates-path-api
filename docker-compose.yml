@@ -13,7 +13,7 @@ services:
       LOG_LEVEL: 0
       SERVER_PORT: 8080
       SERVER: localhost
-      REDIS_SERVER: cache
+      REDIS_SERVER: redis
       REDIS_PORT: 6379
       REQUEST_PATH: https://wps.hereapi.com/v8/findsequence2
       API_KEY: Xi-sfj72ReKKh6O1_r0oTz9AUVPx5j84JzMaeRj-mb8
@@ -24,9 +24,15 @@ services:
       DB_PORT: 5432
       DB_NAME: meight
       DB_HOST: postgres
+      KAFKA_HOST: kafka
+      KAFKA_PORT: 9092
     depends_on:
-      - postgres
-      - cache
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_healthy
     networks:
       - localnet
 
@@ -40,65 +46,71 @@ services:
       POSTGRES_PASSWORD: meight
       POSTGRES_USER: meight
       POSTGRES_DB: meight
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - localnet
   
-  cache:
+  redis:
     image: redis:6.2-alpine
     restart: always
     ports:
       - 6379:6379
     command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
     volumes: 
-      - cache:/data
+      - redis:/data
     networks:
       - localnet
-  
-  zookeeper:
-    image: confluentinc/cp-zookeeper:latest
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - 22181:2181
 
+# https://stackoverflow.com/questions/75680387/access-bitnami-kafka-docker-container-from-everywhere
   kafka:
-    image: confluentinc/cp-kafka:latest
-    depends_on:
-      - zookeeper
+    image: 'bitnami/kafka:latest'
     ports:
-      - 29092:29092
+      - '9094:9094'
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_BROKER_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@:9093
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=1
+    healthcheck:
+      test: kafka-topics.sh --bootstrap-server kafka:9092 --topic hc --create --if-not-exists && kafka-topics.sh --bootstrap-server kafka:9092 --topic hc --describe
+      interval: 1s
+      timeout: 60s
+      retries: 60
+    networks:
+      - localnet
 
-  tests:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    environment:
-      - REDIS_SERVER="cache"
-      - REDIS_PASSWORD=eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
-      - REDIS_TTL=900
-      - REDIS_DB=0
-      - REDIS_PORT=6379
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8080:8080
     depends_on:
-      - postgres
-      - cache
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
     networks:
       - localnet
 
 volumes:
   db:
     driver: local
-  cache:
+  redis:
     driver: local
 
 networks:
   localnet:
-    name: local
+    driver: bridge
 

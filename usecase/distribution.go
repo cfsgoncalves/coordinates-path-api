@@ -44,7 +44,7 @@ func (d *Distribution) GetBestPath(truckPlate string, date string) ([]sqlcgen.Or
 
 	destinations := []string{}
 	for _, value := range orderTruckArray {
-		destinations = append(destinations, fmt.Sprintf("%d;%s,%s", value.OrderID, value.Latitude, value.Longitude))
+		destinations = append(destinations, fmt.Sprintf("%d;%f,%f", value.OrderID, value.Latitude.Float64, value.Longitude.Float64))
 	}
 
 	requestPath := getRequestPath(destinations)
