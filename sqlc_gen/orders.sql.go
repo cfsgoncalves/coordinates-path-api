@@ -13,22 +13,24 @@ import (
 
 const createOrder = `-- name: CreateOrder :one
 INSERT INTO orders (
-  weight, latitude, longitude, description
+  order_code, weight, latitude, longitude, description
 ) VALUES (
-  $1, $2, $3, $4
+  $1, $2, $3, $4, $5
 )
-RETURNING id, weight, latitude, longitude, description
+RETURNING order_code, weight, latitude, longitude, description
 `
 
 type CreateOrderParams struct {
-	Weight      pgtype.Int4
-	Latitude    pgtype.Float8
-	Longitude   pgtype.Float8
-	Description pgtype.Text
+	OrderCode   string      `binding:"required" db:"order_code" json:"order_code"`
+	Weight      float64     `binding:"required" db:"weight" json:"weight"`
+	Latitude    float64     `binding:"required" db:"latitude" json:"latitude"`
+	Longitude   float64     `binding:"required" db:"longitude" json:"longitude"`
+	Description pgtype.Text `db:"description" json:"description"`
 }
 
 func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order, error) {
 	row := q.db.QueryRow(ctx, createOrder,
+		arg.OrderCode,
 		arg.Weight,
 		arg.Latitude,
 		arg.Longitude,
@@ -36,7 +38,7 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 	)
 	var i Order
 	err := row.Scan(
-		&i.ID,
+		&i.OrderCode,
 		&i.Weight,
 		&i.Latitude,
 		&i.Longitude,
@@ -45,14 +47,26 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Order
 	return i, err
 }
 
-const listOrders = `-- name: ListOrders :many
-SELECT id, weight, latitude, longitude, description FROM orders
-WHERE id = $1
-ORDER BY id
+const getOrdersWeightByOrderIds = `-- name: GetOrdersWeightByOrderIds :one
+SELECT SUM(orders.weight) as total_weight FROM orders 
+WHERE order_code = ANY($1::text[])
 `
 
-func (q *Queries) ListOrders(ctx context.Context, id int64) ([]Order, error) {
-	rows, err := q.db.Query(ctx, listOrders, id)
+func (q *Queries) GetOrdersWeightByOrderIds(ctx context.Context, dollar_1 []string) (int64, error) {
+	row := q.db.QueryRow(ctx, getOrdersWeightByOrderIds, dollar_1)
+	var total_weight int64
+	err := row.Scan(&total_weight)
+	return total_weight, err
+}
+
+const listOrders = `-- name: ListOrders :many
+SELECT order_code, weight, latitude, longitude, description FROM orders
+WHERE order_code = $1
+ORDER BY order_code
+`
+
+func (q *Queries) ListOrders(ctx context.Context, orderCode string) ([]Order, error) {
+	rows, err := q.db.Query(ctx, listOrders, orderCode)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +75,7 @@ func (q *Queries) ListOrders(ctx context.Context, id int64) ([]Order, error) {
 	for rows.Next() {
 		var i Order
 		if err := rows.Scan(
-			&i.ID,
+			&i.OrderCode,
 			&i.Weight,
 			&i.Latitude,
 			&i.Longitude,

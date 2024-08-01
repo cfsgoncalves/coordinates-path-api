@@ -1,37 +1,41 @@
 package api
 
 import (
-	repositoryImpl "meight/repository/implementation"
 	repository "meight/repository/interfaces"
 	sqlcgen "meight/sqlc_gen"
 	"meight/usecase"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 type OrdersAPI struct {
 	Order usecase.Order
 }
 
-func NewOrdersApi(cache repository.Cache, database repositoryImpl.DBAccess) *OrdersAPI {
+func NewOrdersApi(cache repository.Cache, database repository.Database) *OrdersAPI {
 	return &OrdersAPI{Order: *usecase.NewOrder(cache, database)}
 }
 
 func (o *OrdersAPI) AddNewOrder(c *gin.Context) {
 	var order sqlcgen.Order
 
-	if err := c.BindJSON(&order); err != nil {
+	err := c.BindJSON(&order)
+
+	if err != nil {
+		log.Error().Msgf("Error binding json: %v", err)
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
-	err := o.Order.AddOrder(&order)
+	order, err = o.Order.AddOrder(&order)
 
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		log.Error().Msgf("Error adding order: %v", err)
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
 	}
 
-	c.Status(http.StatusOK)
-
+	c.JSON(http.StatusOK, order)
 }

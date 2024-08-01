@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: turn up the needed containers
-      run: docker-compose up --build -d postgres redis kafka
+      run: docker compose up --build -d postgres redis kafka meight
 
     - name: wait until kafka is healthy
       run: timeout 60s sh -c 'until docker ps | grep kafka | grep -q healthy; do echo "Waiting for container to be healthy..."; sleep 2; done'

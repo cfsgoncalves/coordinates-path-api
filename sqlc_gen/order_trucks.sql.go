@@ -12,72 +12,27 @@ import (
 )
 
 type CreateOrderTrucksParams struct {
-	Date          string
-	OrderID       int64
-	TruckPlate    string
-	OrderSequence pgtype.Int4
-	OrderStatus   string
+	Date          string      `binding:"required" db:"date" json:"date"`
+	OrderCode     string      `binding:"required" db:"order_code" json:"order_code"`
+	TruckPlate    string      `binding:"required" db:"truck_plate" json:"truck_plate"`
+	OrderSequence pgtype.Int4 `binding:"required" db:"order_sequence" json:"order_sequence"`
+	OrderStatus   string      `binding:"required" db:"order_status" json:"order_status"`
 }
 
-const listOrderTrucksByPlateAndDate = `-- name: ListOrderTrucksByPlateAndDate :many
-SELECT date, order_id, truck_plate, latitude, longitude FROM order_trucks, orders
-WHERE truck_plate = $1 AND "date" = $2 AND orders.id = order_trucks.order_id
-ORDER BY date
-`
-
-type ListOrderTrucksByPlateAndDateParams struct {
-	TruckPlate string
-	Date       string
-}
-
-type ListOrderTrucksByPlateAndDateRow struct {
-	Date       string
-	OrderID    int64
-	TruckPlate string
-	Latitude   pgtype.Float8
-	Longitude  pgtype.Float8
-}
-
-func (q *Queries) ListOrderTrucksByPlateAndDate(ctx context.Context, arg ListOrderTrucksByPlateAndDateParams) ([]ListOrderTrucksByPlateAndDateRow, error) {
-	rows, err := q.db.Query(ctx, listOrderTrucksByPlateAndDate, arg.TruckPlate, arg.Date)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []ListOrderTrucksByPlateAndDateRow
-	for rows.Next() {
-		var i ListOrderTrucksByPlateAndDateRow
-		if err := rows.Scan(
-			&i.Date,
-			&i.OrderID,
-			&i.TruckPlate,
-			&i.Latitude,
-			&i.Longitude,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listOrderTrucksByPlateAndDateAndOrderStatus = `-- name: ListOrderTrucksByPlateAndDateAndOrderStatus :many
-SELECT date, order_id, truck_plate, order_sequence, order_status FROM order_trucks
+const getOrderTrucksByPlateAndDateAndOrderStatus = `-- name: GetOrderTrucksByPlateAndDateAndOrderStatus :many
+SELECT date, order_code, truck_plate, order_sequence, order_status FROM order_trucks
 WHERE truck_plate = $1 AND "date" = $2 AND order_status = $3
 ORDER BY date
 `
 
-type ListOrderTrucksByPlateAndDateAndOrderStatusParams struct {
-	TruckPlate  string
-	Date        string
-	OrderStatus string
+type GetOrderTrucksByPlateAndDateAndOrderStatusParams struct {
+	TruckPlate  string `binding:"required" db:"truck_plate" json:"truck_plate"`
+	Date        string `binding:"required" db:"date" json:"date"`
+	OrderStatus string `binding:"required" db:"order_status" json:"order_status"`
 }
 
-func (q *Queries) ListOrderTrucksByPlateAndDateAndOrderStatus(ctx context.Context, arg ListOrderTrucksByPlateAndDateAndOrderStatusParams) ([]OrderTruck, error) {
-	rows, err := q.db.Query(ctx, listOrderTrucksByPlateAndDateAndOrderStatus, arg.TruckPlate, arg.Date, arg.OrderStatus)
+func (q *Queries) GetOrderTrucksByPlateAndDateAndOrderStatus(ctx context.Context, arg GetOrderTrucksByPlateAndDateAndOrderStatusParams) ([]OrderTruck, error) {
+	rows, err := q.db.Query(ctx, getOrderTrucksByPlateAndDateAndOrderStatus, arg.TruckPlate, arg.Date, arg.OrderStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +42,7 @@ func (q *Queries) ListOrderTrucksByPlateAndDateAndOrderStatus(ctx context.Contex
 		var i OrderTruck
 		if err := rows.Scan(
 			&i.Date,
-			&i.OrderID,
+			&i.OrderCode,
 			&i.TruckPlate,
 			&i.OrderSequence,
 			&i.OrderStatus,
@@ -102,52 +57,114 @@ func (q *Queries) ListOrderTrucksByPlateAndDateAndOrderStatus(ctx context.Contex
 	return items, nil
 }
 
+const listOrderTrucksByPlateAndDate = `-- name: ListOrderTrucksByPlateAndDate :many
+SELECT date, order_trucks.order_code, truck_plate, latitude, longitude, order_status FROM order_trucks, orders
+WHERE order_trucks.truck_plate=$1 AND order_trucks.date=$2 AND orders.order_code = order_trucks.order_code
+ORDER BY "date"
+`
+
+type ListOrderTrucksByPlateAndDateParams struct {
+	TruckPlate string `binding:"required" db:"truck_plate" json:"truck_plate"`
+	Date       string `binding:"required" db:"date" json:"date"`
+}
+
+type ListOrderTrucksByPlateAndDateRow struct {
+	Date        string  `binding:"required" db:"date" json:"date"`
+	OrderCode   string  `binding:"required" db:"order_code" json:"order_code"`
+	TruckPlate  string  `binding:"required" db:"truck_plate" json:"truck_plate"`
+	Latitude    float64 `binding:"required" db:"latitude" json:"latitude"`
+	Longitude   float64 `binding:"required" db:"longitude" json:"longitude"`
+	OrderStatus string  `binding:"required" db:"order_status" json:"order_status"`
+}
+
+func (q *Queries) ListOrderTrucksByPlateAndDate(ctx context.Context, arg ListOrderTrucksByPlateAndDateParams) ([]ListOrderTrucksByPlateAndDateRow, error) {
+	rows, err := q.db.Query(ctx, listOrderTrucksByPlateAndDate, arg.TruckPlate, arg.Date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListOrderTrucksByPlateAndDateRow
+	for rows.Next() {
+		var i ListOrderTrucksByPlateAndDateRow
+		if err := rows.Scan(
+			&i.Date,
+			&i.OrderCode,
+			&i.TruckPlate,
+			&i.Latitude,
+			&i.Longitude,
+			&i.OrderStatus,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateOrderTruckSequence = `-- name: UpdateOrderTruckSequence :one
+UPDATE order_trucks SET order_sequence=$1, order_status=$2 FROM orders 
+WHERE date=$3 AND order_trucks.order_code=$4 AND truck_plate=$5 RETURNING date, order_trucks.order_code, truck_plate, order_sequence, order_status, longitude, latitude
+`
+
+type UpdateOrderTruckSequenceParams struct {
+	OrderSequence pgtype.Int4 `binding:"required" db:"order_sequence" json:"order_sequence"`
+	OrderStatus   string      `binding:"required" db:"order_status" json:"order_status"`
+	Date          string      `binding:"required" db:"date" json:"date"`
+	OrderCode     string      `binding:"required" db:"order_code" json:"order_code"`
+	TruckPlate    string      `binding:"required" db:"truck_plate" json:"truck_plate"`
+}
+
+type UpdateOrderTruckSequenceRow struct {
+	Date          string      `binding:"required" db:"date" json:"date"`
+	OrderCode     string      `binding:"required" db:"order_code" json:"order_code"`
+	TruckPlate    string      `binding:"required" db:"truck_plate" json:"truck_plate"`
+	OrderSequence pgtype.Int4 `binding:"required" db:"order_sequence" json:"order_sequence"`
+	OrderStatus   string      `binding:"required" db:"order_status" json:"order_status"`
+	Longitude     float64     `binding:"required" db:"longitude" json:"longitude"`
+	Latitude      float64     `binding:"required" db:"latitude" json:"latitude"`
+}
+
+func (q *Queries) UpdateOrderTruckSequence(ctx context.Context, arg UpdateOrderTruckSequenceParams) (UpdateOrderTruckSequenceRow, error) {
+	row := q.db.QueryRow(ctx, updateOrderTruckSequence,
+		arg.OrderSequence,
+		arg.OrderStatus,
+		arg.Date,
+		arg.OrderCode,
+		arg.TruckPlate,
+	)
+	var i UpdateOrderTruckSequenceRow
+	err := row.Scan(
+		&i.Date,
+		&i.OrderCode,
+		&i.TruckPlate,
+		&i.OrderSequence,
+		&i.OrderStatus,
+		&i.Longitude,
+		&i.Latitude,
+	)
+	return i, err
+}
+
 const updateOrderTruckStatus = `-- name: UpdateOrderTruckStatus :exec
-UPDATE order_trucks SET order_status=$1 WHERE date=$2 AND order_id=$3 AND truck_plate=$4
+UPDATE order_trucks SET order_status=$1 WHERE date=$2 AND order_code=$3 AND truck_plate=$4
 `
 
 type UpdateOrderTruckStatusParams struct {
-	OrderStatus string
-	Date        string
-	OrderID     int64
-	TruckPlate  string
+	OrderStatus string `binding:"required" db:"order_status" json:"order_status"`
+	Date        string `binding:"required" db:"date" json:"date"`
+	OrderCode   string `binding:"required" db:"order_code" json:"order_code"`
+	TruckPlate  string `binding:"required" db:"truck_plate" json:"truck_plate"`
 }
 
 func (q *Queries) UpdateOrderTruckStatus(ctx context.Context, arg UpdateOrderTruckStatusParams) error {
 	_, err := q.db.Exec(ctx, updateOrderTruckStatus,
 		arg.OrderStatus,
 		arg.Date,
-		arg.OrderID,
+		arg.OrderCode,
 		arg.TruckPlate,
 	)
 	return err
-}
-
-const updateOrderTrucks = `-- name: UpdateOrderTrucks :one
-UPDATE order_trucks SET order_sequence=$1 WHERE date=$2 AND order_id=$3 AND truck_plate=$4 RETURNING date, order_id, truck_plate, order_sequence, order_status
-`
-
-type UpdateOrderTrucksParams struct {
-	OrderSequence pgtype.Int4
-	Date          string
-	OrderID       int64
-	TruckPlate    string
-}
-
-func (q *Queries) UpdateOrderTrucks(ctx context.Context, arg UpdateOrderTrucksParams) (OrderTruck, error) {
-	row := q.db.QueryRow(ctx, updateOrderTrucks,
-		arg.OrderSequence,
-		arg.Date,
-		arg.OrderID,
-		arg.TruckPlate,
-	)
-	var i OrderTruck
-	err := row.Scan(
-		&i.Date,
-		&i.OrderID,
-		&i.TruckPlate,
-		&i.OrderSequence,
-		&i.OrderStatus,
-	)
-	return i, err
 }

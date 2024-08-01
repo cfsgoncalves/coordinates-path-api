@@ -81,5 +81,4 @@ func (r *Redis) Ping() bool {
 	}
 
 	return true
-
 }

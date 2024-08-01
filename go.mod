@@ -1,6 +1,6 @@
 module meight
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/IBM/sarama v1.43.2

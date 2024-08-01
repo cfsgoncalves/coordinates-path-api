@@ -5,3 +5,7 @@ INSERT INTO trucks (
   $1, $2
 )
 RETURNING *;
+
+-- name: GetTruckByPlate :one
+SELECT * FROM trucks
+WHERE plate = $1;

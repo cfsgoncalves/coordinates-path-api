@@ -7,8 +7,6 @@ package sqlcgen
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createTruck = `-- name: CreateTruck :one
@@ -21,12 +19,24 @@ RETURNING plate, max_weight
 `
 
 type CreateTruckParams struct {
-	Plate     string
-	MaxWeight pgtype.Int4
+	Plate     string  `binding:"required" db:"plate" json:"plate"`
+	MaxWeight float64 `binding:"required" db:"max_weight" json:"max_weight"`
 }
 
 func (q *Queries) CreateTruck(ctx context.Context, arg CreateTruckParams) (Truck, error) {
 	row := q.db.QueryRow(ctx, createTruck, arg.Plate, arg.MaxWeight)
+	var i Truck
+	err := row.Scan(&i.Plate, &i.MaxWeight)
+	return i, err
+}
+
+const getTruckByPlate = `-- name: GetTruckByPlate :one
+SELECT plate, max_weight FROM trucks
+WHERE plate = $1
+`
+
+func (q *Queries) GetTruckByPlate(ctx context.Context, plate string) (Truck, error) {
+	row := q.db.QueryRow(ctx, getTruckByPlate, plate)
 	var i Truck
 	err := row.Scan(&i.Plate, &i.MaxWeight)
 	return i, err

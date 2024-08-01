@@ -8,3 +8,19 @@ sql:
         package: "sqlcgen"
         out: "sqlc_gen"
         sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_db_tags: true
+        overrides:
+          - column: orders.weight
+            go_struct_tag: binding:"required"
+          - column: orders.latitude
+            go_struct_tag: binding:"required"
+          - column: orders.longitude
+            go_struct_tag: binding:"required"
+          - column: orders.order_code
+            go_struct_tag: binding:"required"
+          - column: trucks.*
+            go_struct_tag: binding:"required"
+          - column: order_trucks.*
+            go_struct_tag: binding:"required"
+

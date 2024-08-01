@@ -20,7 +20,6 @@ type DBAccess struct {
 }
 
 func NewDBAccess() (*DBAccess, error) {
-
 	ctx := context.Background()
 
 	pgUsername := configuration.GetEnvAsString("DB_USERNAME", "")
@@ -42,7 +41,7 @@ func NewDBAccess() (*DBAccess, error) {
 	err = connPool.Ping(ctx)
 
 	if err != nil {
-		log.Error().Msgf("NewDBAccess(): Can't connect to the database")
+		log.Error().Msgf("respository.NewDBAccess(): Can't connect to the database")
 		return nil, err
 	}
 
@@ -50,7 +49,7 @@ func NewDBAccess() (*DBAccess, error) {
 }
 
 func (dB *DBAccess) MigrateDB(migrationsFS embed.FS) error {
-	log.Debug().Msg("MigrateDB: Start executing the migration system")
+	log.Debug().Msg("respository.MigrateDB: Start executing the migration system")
 
 	d, err := iofs.New(migrationsFS, "db/migrations")
 	if err != nil {
@@ -59,7 +58,7 @@ func (dB *DBAccess) MigrateDB(migrationsFS embed.FS) error {
 
 	m, err := migrate.NewWithSourceInstance("iofs", d, "postgres://"+dB.ConnectionString)
 	if err != nil {
-		log.Error().Msgf("MigrateDB():%s", err)
+		log.Error().Msgf("respository.MigrateDB():%s", err)
 		return err
 	}
 
@@ -84,4 +83,8 @@ func (dB *DBAccess) MigrateDB(migrationsFS embed.FS) error {
 	log.Trace().Msg("MigrateDB: Ended executing migration system")
 
 	return nil
+}
+
+func (dB *DBAccess) GetConnectionPool() interface{} {
+	return dB.ConnectionPool
 }

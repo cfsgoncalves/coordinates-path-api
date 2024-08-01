@@ -2,25 +2,28 @@ package usecase
 
 import (
 	"context"
-	repository "meight/repository/implementation"
 	repositoryInterface "meight/repository/interfaces"
 	sqlcgen "meight/sqlc_gen"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog/log"
 )
 
 type Order struct {
-	Database repository.DBAccess
+	Database repositoryInterface.Database
 	Cache    repositoryInterface.Cache
 }
 
-func NewOrder(cache repositoryInterface.Cache, database repository.DBAccess) *Order {
+func NewOrder(cache repositoryInterface.Cache, database repositoryInterface.Database) *Order {
 	return &Order{Cache: cache, Database: database}
 }
 
-func (o *Order) AddOrder(order *sqlcgen.Order) error {
+func (o *Order) AddOrder(order *sqlcgen.Order) (sqlcgen.Order, error) {
 
-	queries := sqlcgen.New(o.Database.ConnectionPool)
+	queries := sqlcgen.New(o.Database.GetConnectionPool().(*pgxpool.Pool))
 
-	_, err := queries.CreateOrder(context.Background(), sqlcgen.CreateOrderParams{
+	orderReturn, err := queries.CreateOrder(context.Background(), sqlcgen.CreateOrderParams{
+		OrderCode:   order.OrderCode,
 		Weight:      order.Weight,
 		Latitude:    order.Latitude,
 		Longitude:   order.Longitude,
@@ -28,8 +31,9 @@ func (o *Order) AddOrder(order *sqlcgen.Order) error {
 	})
 
 	if err != nil {
-		return err
+		log.Error().Msgf("orders.AddOrder: Error adding order: %v", err)
+		return sqlcgen.Order{}, err
 	}
 
-	return nil
+	return orderReturn, nil
 }

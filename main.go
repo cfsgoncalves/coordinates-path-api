@@ -2,8 +2,10 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"meight/api"
 	apiHandlers "meight/api/handlers"
+	"meight/configuration"
 	repositoryImpl "meight/repository/implementation"
 	"meight/usecase"
 
@@ -31,14 +33,18 @@ func main() {
 		return
 	}
 
+	//Initialize dependencies
 	cache := repositoryImpl.NewRedis()
+	messageQueue := repositoryImpl.NewKafkaAccess()
+
 	system := usecase.NewSystemMonitoring(cache)
-	truckHandlers := apiHandlers.NewTruckApi(cache, *newDb)
-	distributionHandlers := apiHandlers.NewDistributionApi(cache, *newDb)
-	orderHandlers := apiHandlers.NewOrdersApi(cache, *newDb)
+	truckHandlers := apiHandlers.NewTruckApi(cache, newDb)
+	distributionHandlers := apiHandlers.NewDistributionApi(cache, newDb, messageQueue)
+	orderHandlers := apiHandlers.NewOrdersApi(cache, newDb)
 
 	api.HTTPRouteEndpoints(router, system, distributionHandlers, truckHandlers, orderHandlers)
 
-	router.Run(":8080")
+	SERVER_PORT := configuration.GetEnvAsString("SERVER_PORT", "8081")
+	router.Run(fmt.Sprintf(":%s", SERVER_PORT))
 
 }

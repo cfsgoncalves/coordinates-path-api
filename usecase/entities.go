@@ -3,14 +3,14 @@ package usecase
 import "github.com/jackc/pgx/v5/pgtype"
 
 type Waipoints struct {
-	Id       pgtype.Int4
-	Sequence int
+	Id       string      `json:"id"`
+	Sequence pgtype.Int4 `json:"sequence"`
 }
 
 type Results struct {
-	Waipoints []Waipoints
+	Waipoints []Waipoints `json:"waypoints"`
 }
 
 type HereAPIRequest struct {
-	Results []Results
+	Results []Results `json:"results"`
 }
