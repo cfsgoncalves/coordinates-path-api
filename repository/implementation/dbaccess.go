@@ -88,3 +88,7 @@ func (dB *DBAccess) MigrateDB(migrationsFS embed.FS) error {
 func (dB *DBAccess) GetConnectionPool() interface{} {
 	return dB.ConnectionPool
 }
+
+func (dB *DBAccess) Ping() bool {
+	return true
+}

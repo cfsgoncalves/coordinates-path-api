@@ -2,8 +2,9 @@ package usecase
 
 import (
 	"context"
+	"errors"
+	db "meight/db/sqlcgen"
 	repositoryInterface "meight/repository/interfaces"
-	sqlcgen "meight/sqlc_gen"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
@@ -17,21 +18,21 @@ func NewTruck(database repositoryInterface.Database) *Truck {
 	return &Truck{Database: database}
 }
 
-func (t *Truck) AddTruck(truck *sqlcgen.Truck) error {
+func (t *Truck) AddTruck(truck *db.Truck) (db.Truck, error) {
 
-	queries := sqlcgen.New(t.Database.GetConnectionPool().(*pgxpool.Pool))
+	queries := db.New(t.Database.GetConnectionPool().(*pgxpool.Pool))
 
-	foo := sqlcgen.CreateTruckParams{
+	truckParams := db.CreateTruckParams{
 		Plate:     truck.Plate,
 		MaxWeight: truck.MaxWeight,
 	}
 
-	_, err := queries.CreateTruck(context.Background(), foo)
+	truckDb, err := queries.CreateTruck(context.Background(), truckParams)
 
 	if err != nil {
 		log.Error().Msgf("Error creating truck: %v", err)
-		return err
+		return db.Truck{}, errors.New("error creating truck")
 	}
 
-	return nil
+	return truckDb, nil
 }

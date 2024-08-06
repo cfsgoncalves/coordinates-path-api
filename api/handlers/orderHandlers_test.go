@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	db "meight/db/sqlcgen"
 	repositoryImpl "meight/repository/implementation"
-	sqlcgen "meight/sqlc_gen"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,7 +21,7 @@ func TestAddNewOrder(t *testing.T) {
 	t.Run("happy_path", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 
-		order := sqlcgen.Order{
+		order := db.Order{
 			OrderCode:   "123",
 			Weight:      3.0,
 			Latitude:    0.1,
@@ -61,7 +61,7 @@ func TestAddNewOrder(t *testing.T) {
 	t.Run("invalid_json", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 
-		truck := sqlcgen.Truck{
+		truck := db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 3,
 		}
@@ -111,7 +111,7 @@ func TestListOrdersToBeAssigned(t *testing.T) {
 
 		// Create the API instance
 		ordersAPI := NewOrdersApi(newDb)
-		order, err := ordersAPI.Order.AddOrder(&sqlcgen.Order{
+		order, err := ordersAPI.Order.AddOrder(&db.Order{
 			OrderCode:   "foo",
 			Weight:      10,
 			Latitude:    -2.0,
@@ -121,7 +121,7 @@ func TestListOrdersToBeAssigned(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		order2, err := ordersAPI.Order.AddOrder(&sqlcgen.Order{
+		order2, err := ordersAPI.Order.AddOrder(&db.Order{
 			OrderCode:   "bar",
 			Weight:      10,
 			Latitude:    -2.0,
@@ -161,7 +161,7 @@ func TestListOrdersToBeAssigned(t *testing.T) {
 		// Create the API instance
 		ordersAPI := NewOrdersApi(newDb)
 		truckAPI := NewTruckApi(newDb)
-		order, err := ordersAPI.Order.AddOrder(&sqlcgen.Order{
+		order, err := ordersAPI.Order.AddOrder(&db.Order{
 			OrderCode:   "biz",
 			Weight:      10,
 			Latitude:    -2.0,
@@ -171,7 +171,7 @@ func TestListOrdersToBeAssigned(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		order2, err := ordersAPI.Order.AddOrder(&sqlcgen.Order{
+		order2, err := ordersAPI.Order.AddOrder(&db.Order{
 			OrderCode:   "bar",
 			Weight:      10,
 			Latitude:    -2.0,
@@ -180,7 +180,7 @@ func TestListOrdersToBeAssigned(t *testing.T) {
 		})
 		assert.Nil(t, err)
 
-		err = truckAPI.Truck.AddTruck(&sqlcgen.Truck{
+		_, err = truckAPI.Truck.AddTruck(&db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 56,
 		})
@@ -234,7 +234,7 @@ func TestListOrdersToBeAssigned(t *testing.T) {
 		// Create the API instance
 		ordersAPI := NewOrdersApi(newDb)
 		truckAPI := NewTruckApi(newDb)
-		order, err := ordersAPI.Order.AddOrder(&sqlcgen.Order{
+		order, err := ordersAPI.Order.AddOrder(&db.Order{
 			OrderCode:   "biz",
 			Weight:      10,
 			Latitude:    -2.0,
@@ -244,7 +244,7 @@ func TestListOrdersToBeAssigned(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		order2, err := ordersAPI.Order.AddOrder(&sqlcgen.Order{
+		order2, err := ordersAPI.Order.AddOrder(&db.Order{
 			OrderCode:   "bar",
 			Weight:      10,
 			Latitude:    -2.0,
@@ -253,7 +253,7 @@ func TestListOrdersToBeAssigned(t *testing.T) {
 		})
 		assert.Nil(t, err)
 
-		err = truckAPI.Truck.AddTruck(&sqlcgen.Truck{
+		_, err = truckAPI.Truck.AddTruck(&db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 56,
 		})

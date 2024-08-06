@@ -1,9 +1,10 @@
 package api
 
 import (
+	"fmt"
+	db "meight/db/sqlcgen"
 	repository "meight/repository/interfaces"
-	sqlcgen "meight/sqlc_gen"
-	usecase "meight/usecase"
+	"meight/usecase"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +19,7 @@ func NewTruckApi(database repository.Database) *TruckAPI {
 }
 
 func (t *TruckAPI) AddNewTruck(c *gin.Context) {
-	var truck sqlcgen.Truck
+	var truck db.Truck
 
 	err := c.BindJSON(&truck)
 
@@ -27,12 +28,12 @@ func (t *TruckAPI) AddNewTruck(c *gin.Context) {
 		return
 	}
 
-	err = t.Truck.AddTruck(&truck)
+	truck, err = t.Truck.AddTruck(&truck)
 
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, fmt.Sprintf("{ Error: %s}", err))
 		return
 	}
 
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, truck)
 }

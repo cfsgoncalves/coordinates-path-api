@@ -7,4 +7,5 @@ import (
 type Database interface {
 	MigrateDB(embed.FS) error
 	GetConnectionPool() interface{}
+	Ping() bool
 }

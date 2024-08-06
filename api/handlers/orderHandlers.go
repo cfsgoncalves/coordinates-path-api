@@ -1,8 +1,8 @@
 package api
 
 import (
+	db "meight/db/sqlcgen"
 	repository "meight/repository/interfaces"
-	sqlcgen "meight/sqlc_gen"
 	"meight/usecase"
 	"net/http"
 
@@ -19,7 +19,7 @@ func NewOrdersApi(database repository.Database) *OrdersAPI {
 }
 
 func (o *OrdersAPI) AddNewOrder(c *gin.Context) {
-	var order sqlcgen.Order
+	var order db.Order
 
 	err := c.BindJSON(&order)
 

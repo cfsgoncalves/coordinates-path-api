@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	db "meight/db/sqlcgen"
 	repositoryImpl "meight/repository/implementation"
-	sqlcgen "meight/sqlc_gen"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -22,7 +23,7 @@ func TestNewTruckApi(t *testing.T) {
 	t.Run("happy_path", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 
-		truck := sqlcgen.Truck{
+		truck := db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 3,
 		}
@@ -49,7 +50,7 @@ func TestNewTruckApi(t *testing.T) {
 
 		// Add assertions here to validate the response
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Equal(t, "", w.Body.String())
+		assert.Contains(t, w.Body.String(), "33-66-MG")
 
 		t.Cleanup(func() {
 			_, err := newDb.ConnectionPool.Exec(context.Background(), "DELETE FROM meight.public.trucks WHERE plate = '33-66-MG'")
@@ -60,7 +61,7 @@ func TestNewTruckApi(t *testing.T) {
 	t.Run("invalid_json", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 
-		order := sqlcgen.Order{
+		order := db.Order{
 			Weight:      2,
 			Latitude:    0,
 			Longitude:   0,
@@ -102,10 +103,16 @@ func TestNewTruckApi(t *testing.T) {
 	t.Run("duplicate_key_error", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 
-		truck := sqlcgen.Truck{
+		truck := db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 3,
 		}
+
+		db, err := repositoryImpl.NewDBAccess()
+		assert.Nil(t, err)
+
+		_, err = NewTruckApi(db).Truck.AddTruck(&truck)
+		assert.Nil(t, err)
 
 		truckJson, err := json.Marshal(truck)
 		assert.Nil(t, err)
@@ -120,20 +127,19 @@ func TestNewTruckApi(t *testing.T) {
 		// Create the API instance
 		ordersAPI := NewTruckApi(newDb)
 
-		for i := 0; i < 2; i++ {
-			req, err := http.NewRequest(http.MethodPost, "/v1/truck", bytes.NewBuffer(truckJson))
-			assert.Nil(t, err)
+		req, err := http.NewRequest(http.MethodPost, "/v1/truck", bytes.NewBuffer(truckJson))
+		assert.Nil(t, err)
 
-			c, _ := gin.CreateTestContext(w)
-			c.Request = req
+		c, _ := gin.CreateTestContext(w)
+		c.Request = req
 
-			// Call the method to be tested
-			ordersAPI.AddNewTruck(c)
-		}
+		// Call the method to be tested
+		ordersAPI.AddNewTruck(c)
 
 		// Add assertions here to validate the response
-		assert.Contains(t, "SQLSTATE 23505", w.Body.String())
-		assert.Equal(t, http.StatusBadRequest, w.Code)
+		fmt.Println(w.Body.String())
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.Contains(t, w.Body.String(), "error creating truck")
 
 		t.Cleanup(func() {
 			_, err := newDb.ConnectionPool.Exec(context.Background(), "DELETE FROM meight.public.trucks WHERE plate = '33-66-MG'")

@@ -26,6 +26,7 @@ services:
       DB_HOST: postgres
       KAFKA_HOST: kafka
       KAFKA_PORT: 9092
+      DATE_FORMAT: "2006-01-02"
     depends_on:
       postgres:
         condition: service_healthy

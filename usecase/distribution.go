@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"meight/configuration"
+	db "meight/db/sqlcgen"
 	repositoryInterface "meight/repository/interfaces"
-	sqlcgen "meight/sqlc_gen"
 	"net/http"
 	"slices"
 	"time"
@@ -17,7 +17,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var ALLOWED_STATUS = []string{"waiting", "on-going", "delivered"}
+var ALLOWED_STATUS = []string{"waiting", "on-route", "delivered", "not-delivered"}
 
 type Distribution struct {
 	Database     repositoryInterface.Database
@@ -34,7 +34,7 @@ func NewDistribution(database repositoryInterface.Database, cache repositoryInte
 	return &Distribution{Database: database, Cache: cache, HttpC: client, MessageQueue: messageQueue}
 }
 
-func (d *Distribution) GetBestPath(truckPlate string, date string) ([]sqlcgen.UpdateOrderTruckSequenceRow, error) {
+func (d *Distribution) GetBestPath(truckPlate string, date string) ([]db.UpdateOrderTruckSequenceRow, error) {
 	// Validation for date format
 	DATE_FORMAT := configuration.GetEnvAsString("DATE_FORMAT", "2006-01-02")
 	_, err := time.Parse(DATE_FORMAT, date)
@@ -49,9 +49,9 @@ func (d *Distribution) GetBestPath(truckPlate string, date string) ([]sqlcgen.Up
 		return orderTruckArrayToJson, nil
 	}
 
-	queries := sqlcgen.New(d.Database.GetConnectionPool().(*pgxpool.Pool))
+	queries := db.New(d.Database.GetConnectionPool().(*pgxpool.Pool))
 
-	orderTruckArray, err := queries.ListOrderTrucksByPlateAndDate(context.Background(), sqlcgen.ListOrderTrucksByPlateAndDateParams{
+	orderTruckArray, err := queries.ListOrderTrucksByPlateAndDate(context.Background(), db.ListOrderTrucksByPlateAndDateParams{
 		TruckPlate: truckPlate,
 		Date:       date,
 	})
@@ -82,9 +82,9 @@ func (d *Distribution) GetBestPath(truckPlate string, date string) ([]sqlcgen.Up
 	//Update on OrderTrucks OrderSequence and OrderStatus
 	for _, waipoint := range target.Results[0].Waipoints[1:] {
 
-		orderTruck, err := queries.UpdateOrderTruckSequence(context.Background(), sqlcgen.UpdateOrderTruckSequenceParams{
+		orderTruck, err := queries.UpdateOrderTruckSequence(context.Background(), db.UpdateOrderTruckSequenceParams{
 			OrderSequence: waipoint.Sequence,
-			OrderStatus:   "on-going",
+			OrderStatus:   "on-route",
 			Date:          date,
 			OrderCode:     waipoint.Id,
 			TruckPlate:    truckPlate,
@@ -109,8 +109,8 @@ func (d *Distribution) GetBestPath(truckPlate string, date string) ([]sqlcgen.Up
 }
 
 func (d *Distribution) AssignOrdersToTruck(truckPlate string, orderCodes []string) error {
-	orderTruckArray := []sqlcgen.CreateOrderTrucksParams{}
-	queries := sqlcgen.New(d.Database.GetConnectionPool().(*pgxpool.Pool))
+	orderTruckArray := []db.CreateOrderTrucksParams{}
+	queries := db.New(d.Database.GetConnectionPool().(*pgxpool.Pool))
 
 	ordersWeight, err := d.getOrderWeightBasedOnIds(orderCodes)
 
@@ -138,7 +138,7 @@ func (d *Distribution) AssignOrdersToTruck(truckPlate string, orderCodes []strin
 	date := currentTime.Format(DATE_FORMAT)
 
 	for _, orderCode := range orderCodes {
-		orderTruckParam := sqlcgen.CreateOrderTrucksParams{
+		orderTruckParam := db.CreateOrderTrucksParams{
 			Date:          date,
 			OrderCode:     orderCode,
 			TruckPlate:    truckPlate,
@@ -181,9 +181,9 @@ func (d *Distribution) UpdateOrderShippingStatus(truckPlate string, date string,
 		return errors.New("invalid date format")
 	}
 
-	queries := sqlcgen.New(d.Database.GetConnectionPool().(*pgxpool.Pool))
+	queries := db.New(d.Database.GetConnectionPool().(*pgxpool.Pool))
 
-	err = queries.UpdateOrderTruckStatus(context.Background(), sqlcgen.UpdateOrderTruckStatusParams{
+	err = queries.UpdateOrderTruckStatus(context.Background(), db.UpdateOrderTruckStatusParams{
 		OrderStatus: status,
 		Date:        date,
 		OrderCode:   orderCode,
@@ -205,6 +205,10 @@ func (d *Distribution) UpdateOrderShippingStatus(truckPlate string, date string,
 
 	// Get from cache
 	orderTruckArrayToJson := d.isDataOnCache(truckPlate, date)
+	if d.isDataOnCache(truckPlate, date) == nil {
+		log.Debug().Msgf("usecase.GetBestPath: Data not found on cache")
+		return nil
+	}
 
 	for index, value := range orderTruckArrayToJson {
 		if value.OrderCode == orderCode {
@@ -221,7 +225,7 @@ func (d *Distribution) UpdateOrderShippingStatus(truckPlate string, date string,
 	return nil
 }
 
-func (d *Distribution) GetOrdersFromTruck(truckPlate string, date string, status string) ([]sqlcgen.ListOrderTrucksByPlateAndDateRow, error) {
+func (d *Distribution) GetOrdersFromTruck(truckPlate string, date string, status string) ([]db.ListOrderTrucksByPlateAndDateRow, error) {
 	// Validation for status
 	if !slices.Contains(ALLOWED_STATUS, status) {
 		return nil, errors.New("invalid status")
@@ -236,9 +240,9 @@ func (d *Distribution) GetOrdersFromTruck(truckPlate string, date string, status
 		return nil, errors.New("invalid date format")
 	}
 
-	queries := sqlcgen.New(d.Database.GetConnectionPool().(*pgxpool.Pool))
+	queries := db.New(d.Database.GetConnectionPool().(*pgxpool.Pool))
 
-	orderTruckArray, err := queries.ListOrderTrucksByPlateAndDate(context.Background(), sqlcgen.ListOrderTrucksByPlateAndDateParams{
+	orderTruckArray, err := queries.ListOrderTrucksByPlateAndDate(context.Background(), db.ListOrderTrucksByPlateAndDateParams{
 		TruckPlate: truckPlate,
 		Date:       date,
 	})
@@ -248,7 +252,7 @@ func (d *Distribution) GetOrdersFromTruck(truckPlate string, date string, status
 		return nil, errors.New("error trying to acess the database")
 	}
 
-	orderTruckArrayStatus := []sqlcgen.ListOrderTrucksByPlateAndDateRow{}
+	orderTruckArrayStatus := []db.ListOrderTrucksByPlateAndDateRow{}
 	for _, value := range orderTruckArray {
 		if value.OrderStatus == status {
 			orderTruckArrayStatus = append(orderTruckArrayStatus, value)
@@ -259,7 +263,7 @@ func (d *Distribution) GetOrdersFromTruck(truckPlate string, date string, status
 }
 
 func (d *Distribution) getOrderWeightBasedOnIds(orderIds []string) (int64, error) {
-	queries := sqlcgen.New(d.Database.GetConnectionPool().(*pgxpool.Pool))
+	queries := db.New(d.Database.GetConnectionPool().(*pgxpool.Pool))
 
 	orders, err := queries.GetOrdersWeightByOrderIds(context.Background(), orderIds)
 	if err != nil {
@@ -290,7 +294,7 @@ func (d *Distribution) getRequestPath(destinations []string) string {
 	return request_final
 }
 
-func (d *Distribution) isDataOnCache(truckPlate string, date string) []sqlcgen.UpdateOrderTruckSequenceRow {
+func (d *Distribution) isDataOnCache(truckPlate string, date string) []db.UpdateOrderTruckSequenceRow {
 	//Check if data exists on cache
 	orderTruckArrayCache, err := d.Cache.Get(fmt.Sprintf("%s-%s", truckPlate, date))
 	if err != nil {
@@ -298,7 +302,7 @@ func (d *Distribution) isDataOnCache(truckPlate string, date string) []sqlcgen.U
 	}
 
 	// Return the values on cache with 200 and value
-	var orderTruck []sqlcgen.UpdateOrderTruckSequenceRow
+	var orderTruck []db.UpdateOrderTruckSequenceRow
 	if orderTruckArrayCache != "" {
 		err := json.Unmarshal([]byte(orderTruckArrayCache), &orderTruck)
 
@@ -312,7 +316,7 @@ func (d *Distribution) isDataOnCache(truckPlate string, date string) []sqlcgen.U
 	return nil
 }
 
-func (d *Distribution) saveToCache(truckPlate string, date string, orderTruckArrayToJson []sqlcgen.UpdateOrderTruckSequenceRow) error {
+func (d *Distribution) saveToCache(truckPlate string, date string, orderTruckArrayToJson []db.UpdateOrderTruckSequenceRow) error {
 	jsonString, err := json.Marshal(orderTruckArrayToJson)
 
 	if err != nil {

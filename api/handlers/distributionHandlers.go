@@ -23,12 +23,12 @@ func (d *DistributionAPI) UpdateOrderShippingStatus(c *gin.Context) {
 	date, _ := c.Params.Get("date")
 
 	orderStatus := struct {
-		Status    string `binding:"required"`
-		OrderCode string `binding:"required"`
+		Status    string `binding:"required" json:"status"`
+		OrderCode string `binding:"required" json:"order_code"`
 	}{}
 
 	if err := c.BindJSON(&orderStatus); err != nil {
-		log.Error().Msgf("Bad Request. Could not BindJson to struct")
+		log.Error().Msgf("api.UpdateOrderShippingStatus: Bad Request. Could not BindJson to struct")
 		c.Status(http.StatusBadRequest)
 		return
 	}
@@ -43,14 +43,14 @@ func (d *DistributionAPI) UpdateOrderShippingStatus(c *gin.Context) {
 
 func (d *DistributionAPI) AssignOrdersToTruck(c *gin.Context) {
 	value, _ := c.Params.Get("truckPlate")
-	id := []string{}
+	orderCodes := []string{}
 
-	if err := c.BindJSON(&id); err != nil {
+	if err := c.BindJSON(&orderCodes); err != nil {
 		log.Error().Msgf("Bad Request. Could not BindJson to struct")
 		c.AbortWithStatusJSON(http.StatusBadRequest, fmt.Sprintf("{ Error: %s}", "Could not BindJson to struct"))
 	}
 
-	err := d.Distribution.AssignOrdersToTruck(value, id)
+	err := d.Distribution.AssignOrdersToTruck(value, orderCodes)
 
 	if err != nil {
 		log.Error().Msgf("Error AssigningOrdersToTruc yield error %s", err)

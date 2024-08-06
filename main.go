@@ -7,7 +7,6 @@ import (
 	apiHandlers "meight/api/handlers"
 	"meight/configuration"
 	repositoryImpl "meight/repository/implementation"
-	"meight/usecase"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -37,7 +36,7 @@ func main() {
 	cache := repositoryImpl.NewRedis()
 	messageQueue := repositoryImpl.NewKafkaAccess()
 
-	system := usecase.NewSystemMonitoring(cache, newDb, messageQueue)
+	system := apiHandlers.NewSystemMonitoringAPI(cache, newDb, messageQueue)
 
 	truckHandlers := apiHandlers.NewTruckApi(newDb)
 	distributionHandlers := apiHandlers.NewDistributionApi(cache, newDb, messageQueue)

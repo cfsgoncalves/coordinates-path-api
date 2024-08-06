@@ -3,7 +3,7 @@
 //   sqlc v1.26.0
 // source: orders.sql
 
-package sqlcgen
+package db
 
 import (
 	"context"

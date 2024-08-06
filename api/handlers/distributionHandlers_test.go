@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"meight/configuration"
+	db "meight/db/sqlcgen"
 	repositoryImpl "meight/repository/implementation"
-	sqlcgen "meight/sqlc_gen"
 	"meight/usecase"
 	"net/http"
 	"net/http/httptest"
@@ -33,16 +33,16 @@ func TestAssignOrdersToTruck(t *testing.T) {
 		assert.Nil(t, err)
 
 		//Add truck
-		truck := sqlcgen.Truck{
+		truck := db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(newDb).AddTruck(&truck)
+		_, err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
-		order := sqlcgen.Order{
+		order := db.Order{
 			OrderCode:   "bar",
 			Weight:      10,
 			Latitude:    2.0,
@@ -50,7 +50,7 @@ func TestAssignOrdersToTruck(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		orderInsert2 := sqlcgen.Order{
+		orderInsert2 := db.Order{
 			OrderCode:   "foo",
 			Weight:      10,
 			Latitude:    1.0,
@@ -111,16 +111,16 @@ func TestAssignOrdersToTruck(t *testing.T) {
 		assert.Nil(t, err)
 
 		//Add truck
-		truck := sqlcgen.Truck{
+		truck := db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(newDb).AddTruck(&truck)
+		_, err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
-		order := sqlcgen.Order{
+		order := db.Order{
 			OrderCode:   "u123-123-122",
 			Weight:      10,
 			Latitude:    1.0,
@@ -128,7 +128,7 @@ func TestAssignOrdersToTruck(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		orderInsert2 := sqlcgen.Order{
+		orderInsert2 := db.Order{
 			OrderCode:   "u123-123-123",
 			Weight:      30,
 			Latitude:    1.0,
@@ -189,16 +189,16 @@ func TestAssignOrdersToTruck(t *testing.T) {
 		assert.Nil(t, err)
 
 		//Add truck
-		truck := sqlcgen.Truck{
+		truck := db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(newDb).AddTruck(&truck)
+		_, err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
-		order := sqlcgen.Order{
+		order := db.Order{
 			OrderCode:   "u123-123-122",
 			Weight:      10,
 			Latitude:    1.0,
@@ -206,7 +206,7 @@ func TestAssignOrdersToTruck(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		orderInsert2 := sqlcgen.Order{
+		orderInsert2 := db.Order{
 			OrderCode:   "u123-123-123",
 			Weight:      10,
 			Latitude:    1.0,
@@ -272,16 +272,16 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 		ms := repositoryImpl.NewKafkaAccess()
 
 		//Add truck
-		truck := sqlcgen.Truck{
+		truck := db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(newDb).AddTruck(&truck)
+		_, err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
-		order := sqlcgen.Order{
+		order := db.Order{
 			OrderCode:   "u123-123-122",
 			Weight:      10,
 			Latitude:    1.0,
@@ -289,7 +289,7 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		orderInsert2 := sqlcgen.Order{
+		orderInsert2 := db.Order{
 			OrderCode:   "u123-123-123",
 			Weight:      10,
 			Latitude:    1.0,
@@ -316,8 +316,8 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 		newStatus := "delivered"
 
 		inputBody := struct {
-			Status    string `binding:"required"`
-			OrderCode string `binding:"required"`
+			Status    string `binding:"required" json:"status"`
+			OrderCode string `binding:"required" json:"order_code"`
 		}{
 			Status:    newStatus,
 			OrderCode: order2.OrderCode,
@@ -373,16 +373,16 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 		ms := repositoryImpl.NewKafkaAccess()
 
 		//Add truck
-		truck := sqlcgen.Truck{
+		truck := db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(newDb).AddTruck(&truck)
+		_, err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
-		order := sqlcgen.Order{
+		order := db.Order{
 			OrderCode:   "u123-123-122",
 			Weight:      10,
 			Latitude:    1.0,
@@ -390,7 +390,7 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		orderInsert2 := sqlcgen.Order{
+		orderInsert2 := db.Order{
 			OrderCode:   "u123-123-123",
 			Weight:      10,
 			Latitude:    1.0,
@@ -416,16 +416,10 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 		// Update order status
 		newStatus := "fooo"
 
-		currentTime := time.Now()
-		DATE_FORMAT := configuration.GetEnvAsString("DATE_FORMAT", "2006-01-02")
-		date := currentTime.Format(DATE_FORMAT)
-
 		inputBody := struct {
-			Date      string `binding:"required"`
-			Status    string `binding:"required"`
-			OrderCode string `binding:"required"`
+			Status    string `binding:"required" json:"status"`
+			OrderCode string `binding:"required" json:"order_code"`
 		}{
-			Date:      date,
 			Status:    newStatus,
 			OrderCode: order2.OrderCode,
 		}
@@ -439,7 +433,12 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 
+		currentTime := time.Now()
+		DATE_FORMAT := configuration.GetEnvAsString("DATE_FORMAT", "2006-01-02")
+		date := currentTime.Format(DATE_FORMAT)
+
 		c.Params = append(c.Params, gin.Param{Key: "truckPlate", Value: truck.Plate})
+		c.Params = append(c.Params, gin.Param{Key: "date", Value: date})
 		c.Request = req
 
 		// Create the API instance
@@ -475,16 +474,16 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 		ms := repositoryImpl.NewKafkaAccess()
 
 		//Add truck
-		truck := sqlcgen.Truck{
+		truck := db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(newDb).AddTruck(&truck)
+		_, err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
-		order := sqlcgen.Order{
+		order := db.Order{
 			OrderCode:   "u123-123-122",
 			Weight:      10,
 			Latitude:    1.0,
@@ -492,7 +491,7 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		orderInsert2 := sqlcgen.Order{
+		orderInsert2 := db.Order{
 			OrderCode:   "u123-123-123",
 			Weight:      10,
 			Latitude:    1.0,
@@ -516,14 +515,12 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 		assert.Nil(t, err)
 
 		// Update order status
-		newStatus := "on-going"
+		newStatus := "on-route"
 
 		inputBody := struct {
-			Date      string `binding:"required"`
-			Status    string `binding:"required"`
-			OrderCode string `binding:"required"`
+			Status    string `binding:"required" json:"status"`
+			OrderCode string `binding:"required" json:"order_code"`
 		}{
-			Date:      "02-01-2023",
 			Status:    newStatus,
 			OrderCode: order2.OrderCode,
 		}
@@ -538,6 +535,7 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 		c, _ := gin.CreateTestContext(w)
 
 		c.Params = append(c.Params, gin.Param{Key: "truckPlate", Value: truck.Plate})
+		c.Params = append(c.Params, gin.Param{Key: "date", Value: "12-12-12"})
 		c.Request = req
 
 		// Create the API instance
@@ -577,16 +575,16 @@ func TestGetBestPath(t *testing.T) {
 		ms := repositoryImpl.NewKafkaAccess()
 
 		//Add truck
-		truck := sqlcgen.Truck{
+		truck := db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(newDb).AddTruck(&truck)
+		_, err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
-		order := sqlcgen.Order{
+		order := db.Order{
 			OrderCode:   "u123-123-122",
 			Weight:      10,
 			Latitude:    50.1218,
@@ -594,7 +592,7 @@ func TestGetBestPath(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		orderInsert2 := sqlcgen.Order{
+		orderInsert2 := db.Order{
 			OrderCode:   "u123-123-123",
 			Weight:      10,
 			Latitude:    50.1073,
@@ -664,16 +662,16 @@ func TestGetBestPath(t *testing.T) {
 		ms := repositoryImpl.NewKafkaAccess()
 
 		//Add truck
-		truck := sqlcgen.Truck{
+		truck := db.Truck{
 			Plate:     "33-66-MG",
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(newDb).AddTruck(&truck)
+		_, err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
-		order := sqlcgen.Order{
+		order := db.Order{
 			OrderCode:   "u123-123-122",
 			Weight:      10,
 			Latitude:    1.0,
@@ -681,7 +679,7 @@ func TestGetBestPath(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		orderInsert2 := sqlcgen.Order{
+		orderInsert2 := db.Order{
 			OrderCode:   "u123-123-123",
 			Weight:      10,
 			Latitude:    1.0,
@@ -748,16 +746,16 @@ func TestGetBestPath(t *testing.T) {
 		ms := repositoryImpl.NewKafkaAccess()
 
 		//Add truck
-		truck := sqlcgen.Truck{
+		truck := db.Truck{
 			Plate:     "33-66-MG1",
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(newDb).AddTruck(&truck)
+		_, err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
-		order := sqlcgen.Order{
+		order := db.Order{
 			OrderCode:   "u123-123-122",
 			Weight:      10,
 			Latitude:    1.0,
@@ -765,7 +763,7 @@ func TestGetBestPath(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		orderInsert2 := sqlcgen.Order{
+		orderInsert2 := db.Order{
 			OrderCode:   "u123-123-123",
 			Weight:      10,
 			Latitude:    1.0,

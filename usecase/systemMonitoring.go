@@ -2,9 +2,6 @@ package usecase
 
 import (
 	repositoryInterface "meight/repository/interfaces"
-	"net/http"
-
-	"github.com/gin-gonic/gin"
 )
 
 type SystemMonitoring struct {
@@ -17,10 +14,11 @@ func NewSystemMonitoring(cache repositoryInterface.Cache, db repositoryInterface
 	return &SystemMonitoring{Cache: cache, Database: db, MessageQueue: ms}
 }
 
-func (s *SystemMonitoring) Ping(context *gin.Context) {
-	context.Status(http.StatusOK)
+func (s *SystemMonitoring) Ping() bool {
+	return true
 }
 
 // Need to implemente Health function
-func (s *SystemMonitoring) Health(context *gin.Context) {
+func (s *SystemMonitoring) Health() bool {
+	return s.Cache.Ping() && s.Database.Ping() && s.MessageQueue.Ping()
 }

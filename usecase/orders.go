@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"context"
+	db "meight/db/sqlcgen"
 	repositoryInterface "meight/repository/interfaces"
-	sqlcgen "meight/sqlc_gen"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
@@ -17,11 +17,11 @@ func NewOrder(database repositoryInterface.Database) *Order {
 	return &Order{Database: database}
 }
 
-func (o *Order) AddOrder(order *sqlcgen.Order) (sqlcgen.Order, error) {
+func (o *Order) AddOrder(order *db.Order) (db.Order, error) {
 
-	queries := sqlcgen.New(o.Database.GetConnectionPool().(*pgxpool.Pool))
+	queries := db.New(o.Database.GetConnectionPool().(*pgxpool.Pool))
 
-	orderReturn, err := queries.CreateOrder(context.Background(), sqlcgen.CreateOrderParams{
+	orderReturn, err := queries.CreateOrder(context.Background(), db.CreateOrderParams{
 		OrderCode:   order.OrderCode,
 		Weight:      order.Weight,
 		Latitude:    order.Latitude,
@@ -31,14 +31,14 @@ func (o *Order) AddOrder(order *sqlcgen.Order) (sqlcgen.Order, error) {
 
 	if err != nil {
 		log.Error().Msgf("orders.AddOrder: Error adding order: %v", err)
-		return sqlcgen.Order{}, err
+		return db.Order{}, err
 	}
 
 	return orderReturn, nil
 }
 
-func (o *Order) ListOrdersToBeAssigned() ([]sqlcgen.Order, error) {
-	queries := sqlcgen.New(o.Database.GetConnectionPool().(*pgxpool.Pool))
+func (o *Order) ListOrdersToBeAssigned() ([]db.Order, error) {
+	queries := db.New(o.Database.GetConnectionPool().(*pgxpool.Pool))
 
 	orders, err := queries.ListOrdersToBeAssigned(context.Background())
 
