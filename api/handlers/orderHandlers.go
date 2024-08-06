@@ -14,8 +14,8 @@ type OrdersAPI struct {
 	Order usecase.Order
 }
 
-func NewOrdersApi(cache repository.Cache, database repository.Database) *OrdersAPI {
-	return &OrdersAPI{Order: *usecase.NewOrder(cache, database)}
+func NewOrdersApi(database repository.Database) *OrdersAPI {
+	return &OrdersAPI{Order: *usecase.NewOrder(database)}
 }
 
 func (o *OrdersAPI) AddNewOrder(c *gin.Context) {
@@ -40,10 +40,8 @@ func (o *OrdersAPI) AddNewOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, order)
 }
 
-func (o *OrdersAPI) GetOrderByStatus(c *gin.Context) {
-	status, _ := c.Params.Get("truckPlate")
-
-	orders, err := o.Order.GetOrderByStatus(status)
+func (o *OrdersAPI) ListOrdersToBeAssigned(c *gin.Context) {
+	orders, err := o.Order.ListOrdersToBeAssigned()
 	if err != nil {
 		log.Error().Msgf("Error getting orders: %v", err)
 		c.AbortWithError(http.StatusInternalServerError, err)

@@ -38,12 +38,11 @@ func TestNewTruckApi(t *testing.T) {
 		c.Request = req
 
 		// Initialize dependencies
-		cache := repositoryImpl.NewRedis()
 		newDb, err := repositoryImpl.NewDBAccess()
 		assert.Nil(t, err)
 
 		// Create the API instance
-		ordersAPI := NewTruckApi(cache, newDb)
+		ordersAPI := NewTruckApi(newDb)
 
 		// Call the method to be tested
 		ordersAPI.AddNewTruck(c)
@@ -75,12 +74,11 @@ func TestNewTruckApi(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// Initialize dependencies
-		cache := repositoryImpl.NewRedis()
 		newDb, err := repositoryImpl.NewDBAccess()
 		assert.Nil(t, err)
 
 		// Create the API instance
-		ordersAPI := NewTruckApi(cache, newDb)
+		ordersAPI := NewTruckApi(newDb)
 
 		req, err := http.NewRequest(http.MethodPost, "/v1/truck", bytes.NewBuffer(truckJson))
 		assert.Nil(t, err)
@@ -116,12 +114,11 @@ func TestNewTruckApi(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		// Initialize dependencies
-		cache := repositoryImpl.NewRedis()
 		newDb, err := repositoryImpl.NewDBAccess()
 		assert.Nil(t, err)
 
 		// Create the API instance
-		ordersAPI := NewTruckApi(cache, newDb)
+		ordersAPI := NewTruckApi(newDb)
 
 		for i := 0; i < 2; i++ {
 			req, err := http.NewRequest(http.MethodPost, "/v1/truck", bytes.NewBuffer(truckJson))

@@ -11,7 +11,7 @@ func HTTPRouteEndpoints(router *gin.Engine, system *usecase.SystemMonitoring, di
 
 	router.POST("/v1/truck", truckApi.AddNewTruck)
 	router.POST("/v1/order", orderApi.AddNewOrder)
-	router.GET("/v1/order/:status", orderApi.GetOrderByStatus)
+	router.GET("/v1/order/", orderApi.ListOrdersToBeAssigned)
 	router.POST("/v1/orderTruck/:truckPlate", distributionApi.AssignOrdersToTruck)
 	router.PATCH("/v1/orderTruck/:truckPlate/:date", distributionApi.UpdateOrderShippingStatus)
 	router.GET("/v1/path/:truckPlate/:date", distributionApi.GetBestPath)

@@ -91,14 +91,18 @@ func (q *Queries) ListOrders(ctx context.Context, orderCode string) ([]Order, er
 	return items, nil
 }
 
-const listOrdersByStatus = `-- name: ListOrdersByStatus :many
-SELECT orders.order_code, weight, latitude, longitude,description FROM orders, order_trucks
-WHERE orders.order_code = order_trucks.order_code AND order_trucks.order_status = $1
-ORDER BY orders.order_code
+const listOrdersToBeAssigned = `-- name: ListOrdersToBeAssigned :many
+SELECT order_code, weight, latitude, longitude, description FROM orders
+WHERE NOT exists
+(
+SELECT order_code FROM order_trucks ot
+WHERE order_code  = orders.order_code
+and ot.order_status = 'waiting' and Date(ot.date) >= NOW()::timestamp::date
+)
 `
 
-func (q *Queries) ListOrdersByStatus(ctx context.Context, orderStatus string) ([]Order, error) {
-	rows, err := q.db.Query(ctx, listOrdersByStatus, orderStatus)
+func (q *Queries) ListOrdersToBeAssigned(ctx context.Context) ([]Order, error) {
+	rows, err := q.db.Query(ctx, listOrdersToBeAssigned)
 	if err != nil {
 		return nil, err
 	}

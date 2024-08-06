@@ -11,11 +11,10 @@ import (
 
 type Truck struct {
 	Database repositoryInterface.Database
-	Cache    repositoryInterface.Cache
 }
 
-func NewTruck(cache repositoryInterface.Cache, database repositoryInterface.Database) *Truck {
-	return &Truck{Cache: cache, Database: database}
+func NewTruck(database repositoryInterface.Database) *Truck {
+	return &Truck{Database: database}
 }
 
 func (t *Truck) AddTruck(truck *sqlcgen.Truck) error {

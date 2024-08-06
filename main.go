@@ -37,10 +37,11 @@ func main() {
 	cache := repositoryImpl.NewRedis()
 	messageQueue := repositoryImpl.NewKafkaAccess()
 
-	system := usecase.NewSystemMonitoring(cache)
-	truckHandlers := apiHandlers.NewTruckApi(cache, newDb)
+	system := usecase.NewSystemMonitoring(cache, newDb, messageQueue)
+
+	truckHandlers := apiHandlers.NewTruckApi(newDb)
 	distributionHandlers := apiHandlers.NewDistributionApi(cache, newDb, messageQueue)
-	orderHandlers := apiHandlers.NewOrdersApi(cache, newDb)
+	orderHandlers := apiHandlers.NewOrdersApi(newDb)
 
 	api.HTTPRouteEndpoints(router, system, distributionHandlers, truckHandlers, orderHandlers)
 

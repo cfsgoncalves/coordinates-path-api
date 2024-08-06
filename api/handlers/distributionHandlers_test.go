@@ -38,7 +38,7 @@ func TestAssignOrdersToTruck(t *testing.T) {
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(cache, newDb).AddTruck(&truck)
+		err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
@@ -58,11 +58,11 @@ func TestAssignOrdersToTruck(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		order1, err := usecase.NewOrder(cache, newDb).AddOrder(&order)
+		order1, err := usecase.NewOrder(newDb).AddOrder(&order)
 		assert.Nil(t, err)
 		assert.NotNil(t, order1)
 
-		order2, err := usecase.NewOrder(cache, newDb).AddOrder(&orderInsert2)
+		order2, err := usecase.NewOrder(newDb).AddOrder(&orderInsert2)
 		assert.Nil(t, err)
 		assert.NotNil(t, order2)
 
@@ -116,7 +116,7 @@ func TestAssignOrdersToTruck(t *testing.T) {
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(cache, newDb).AddTruck(&truck)
+		err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
@@ -136,11 +136,11 @@ func TestAssignOrdersToTruck(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		order1, err := usecase.NewOrder(cache, newDb).AddOrder(&order)
+		order1, err := usecase.NewOrder(newDb).AddOrder(&order)
 		assert.Nil(t, err)
 		assert.NotNil(t, order1)
 
-		order2, err := usecase.NewOrder(cache, newDb).AddOrder(&orderInsert2)
+		order2, err := usecase.NewOrder(newDb).AddOrder(&orderInsert2)
 		assert.Nil(t, err)
 		assert.NotNil(t, order2)
 
@@ -194,7 +194,7 @@ func TestAssignOrdersToTruck(t *testing.T) {
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(cache, newDb).AddTruck(&truck)
+		err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
@@ -214,11 +214,11 @@ func TestAssignOrdersToTruck(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		order1, err := usecase.NewOrder(cache, newDb).AddOrder(&order)
+		order1, err := usecase.NewOrder(newDb).AddOrder(&order)
 		assert.Nil(t, err)
 		assert.NotNil(t, order1)
 
-		order2, err := usecase.NewOrder(cache, newDb).AddOrder(&orderInsert2)
+		order2, err := usecase.NewOrder(newDb).AddOrder(&orderInsert2)
 		assert.Nil(t, err)
 		assert.NotNil(t, order2)
 
@@ -277,7 +277,7 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(cache, newDb).AddTruck(&truck)
+		err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
@@ -297,11 +297,11 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		order1, err := usecase.NewOrder(cache, newDb).AddOrder(&order)
+		order1, err := usecase.NewOrder(newDb).AddOrder(&order)
 		assert.Nil(t, err)
 		assert.NotNil(t, order1)
 
-		order2, err := usecase.NewOrder(cache, newDb).AddOrder(&orderInsert2)
+		order2, err := usecase.NewOrder(newDb).AddOrder(&orderInsert2)
 		assert.Nil(t, err)
 		assert.NotNil(t, order2)
 
@@ -378,7 +378,7 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(cache, newDb).AddTruck(&truck)
+		err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
@@ -398,11 +398,11 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		order1, err := usecase.NewOrder(cache, newDb).AddOrder(&order)
+		order1, err := usecase.NewOrder(newDb).AddOrder(&order)
 		assert.Nil(t, err)
 		assert.NotNil(t, order1)
 
-		order2, err := usecase.NewOrder(cache, newDb).AddOrder(&orderInsert2)
+		order2, err := usecase.NewOrder(newDb).AddOrder(&orderInsert2)
 		assert.Nil(t, err)
 		assert.NotNil(t, order2)
 
@@ -480,7 +480,7 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(cache, newDb).AddTruck(&truck)
+		err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
@@ -500,11 +500,11 @@ func TestUpdateOrderShippingStatus(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		order1, err := usecase.NewOrder(cache, newDb).AddOrder(&order)
+		order1, err := usecase.NewOrder(newDb).AddOrder(&order)
 		assert.Nil(t, err)
 		assert.NotNil(t, order1)
 
-		order2, err := usecase.NewOrder(cache, newDb).AddOrder(&orderInsert2)
+		order2, err := usecase.NewOrder(newDb).AddOrder(&orderInsert2)
 		assert.Nil(t, err)
 		assert.NotNil(t, order2)
 
@@ -582,7 +582,7 @@ func TestGetBestPath(t *testing.T) {
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(cache, newDb).AddTruck(&truck)
+		err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
@@ -602,11 +602,11 @@ func TestGetBestPath(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		order1, err := usecase.NewOrder(cache, newDb).AddOrder(&order)
+		order1, err := usecase.NewOrder(newDb).AddOrder(&order)
 		assert.Nil(t, err)
 		assert.NotNil(t, order1)
 
-		order2, err := usecase.NewOrder(cache, newDb).AddOrder(&orderInsert2)
+		order2, err := usecase.NewOrder(newDb).AddOrder(&orderInsert2)
 		assert.Nil(t, err)
 		assert.NotNil(t, order2)
 
@@ -669,7 +669,7 @@ func TestGetBestPath(t *testing.T) {
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(cache, newDb).AddTruck(&truck)
+		err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
@@ -689,11 +689,11 @@ func TestGetBestPath(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		order1, err := usecase.NewOrder(cache, newDb).AddOrder(&order)
+		order1, err := usecase.NewOrder(newDb).AddOrder(&order)
 		assert.Nil(t, err)
 		assert.NotNil(t, order1)
 
-		order2, err := usecase.NewOrder(cache, newDb).AddOrder(&orderInsert2)
+		order2, err := usecase.NewOrder(newDb).AddOrder(&orderInsert2)
 		assert.Nil(t, err)
 		assert.NotNil(t, order2)
 
@@ -753,7 +753,7 @@ func TestGetBestPath(t *testing.T) {
 			MaxWeight: 20.5,
 		}
 
-		err = usecase.NewTruck(cache, newDb).AddTruck(&truck)
+		err = usecase.NewTruck(newDb).AddTruck(&truck)
 		assert.Nil(t, err)
 
 		//Add orders
@@ -773,11 +773,11 @@ func TestGetBestPath(t *testing.T) {
 			Description: pgtype.Text{String: "fooo", Valid: true},
 		}
 
-		order1, err := usecase.NewOrder(cache, newDb).AddOrder(&order)
+		order1, err := usecase.NewOrder(newDb).AddOrder(&order)
 		assert.Nil(t, err)
 		assert.NotNil(t, order1)
 
-		order2, err := usecase.NewOrder(cache, newDb).AddOrder(&orderInsert2)
+		order2, err := usecase.NewOrder(newDb).AddOrder(&orderInsert2)
 		assert.Nil(t, err)
 		assert.NotNil(t, order2)
 

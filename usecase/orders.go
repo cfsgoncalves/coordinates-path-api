@@ -2,10 +2,8 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	repositoryInterface "meight/repository/interfaces"
 	sqlcgen "meight/sqlc_gen"
-	"slices"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
@@ -13,11 +11,10 @@ import (
 
 type Order struct {
 	Database repositoryInterface.Database
-	Cache    repositoryInterface.Cache
 }
 
-func NewOrder(cache repositoryInterface.Cache, database repositoryInterface.Database) *Order {
-	return &Order{Cache: cache, Database: database}
+func NewOrder(database repositoryInterface.Database) *Order {
+	return &Order{Database: database}
 }
 
 func (o *Order) AddOrder(order *sqlcgen.Order) (sqlcgen.Order, error) {
@@ -40,15 +37,10 @@ func (o *Order) AddOrder(order *sqlcgen.Order) (sqlcgen.Order, error) {
 	return orderReturn, nil
 }
 
-func (o *Order) GetOrderByStatus(status string) ([]sqlcgen.Order, error) {
-	// Validation for status
-	if !slices.Contains(ALLOWED_STATUS, status) {
-		return nil, errors.New("invalid status")
-	}
-
+func (o *Order) ListOrdersToBeAssigned() ([]sqlcgen.Order, error) {
 	queries := sqlcgen.New(o.Database.GetConnectionPool().(*pgxpool.Pool))
 
-	orders, err := queries.ListOrdersByStatus(context.Background(), status)
+	orders, err := queries.ListOrdersToBeAssigned(context.Background())
 
 	if err != nil {
 		log.Error().Msgf("orders.AddOrder: Error adding order: %v", err)

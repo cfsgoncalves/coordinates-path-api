@@ -13,8 +13,8 @@ type TruckAPI struct {
 	Truck usecase.Truck
 }
 
-func NewTruckApi(cache repository.Cache, database repository.Database) *TruckAPI {
-	return &TruckAPI{Truck: *usecase.NewTruck(cache, database)}
+func NewTruckApi(database repository.Database) *TruckAPI {
+	return &TruckAPI{Truck: *usecase.NewTruck(database)}
 }
 
 func (t *TruckAPI) AddNewTruck(c *gin.Context) {
