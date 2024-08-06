@@ -2,8 +2,10 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	repositoryInterface "meight/repository/interfaces"
 	sqlcgen "meight/sqlc_gen"
+	"slices"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
@@ -36,4 +38,21 @@ func (o *Order) AddOrder(order *sqlcgen.Order) (sqlcgen.Order, error) {
 	}
 
 	return orderReturn, nil
+}
+
+func (o *Order) GetOrderByStatus(status string) ([]sqlcgen.Order, error) {
+	// Validation for status
+	if !slices.Contains(ALLOWED_STATUS, status) {
+		return nil, errors.New("invalid status")
+	}
+
+	queries := sqlcgen.New(o.Database.GetConnectionPool().(*pgxpool.Pool))
+
+	orders, err := queries.ListOrdersByStatus(context.Background(), status)
+
+	if err != nil {
+		log.Error().Msgf("orders.AddOrder: Error adding order: %v", err)
+		return nil, err
+	}
+	return orders, nil
 }

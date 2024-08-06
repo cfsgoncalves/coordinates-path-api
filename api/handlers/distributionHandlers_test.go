@@ -617,7 +617,7 @@ func TestGetBestPath(t *testing.T) {
 		err = usecase.NewDistribution(newDb, cache, ms).AssignOrdersToTruck(truck.Plate, orderCodeArray)
 		assert.Nil(t, err)
 
-		req, err := http.NewRequest(http.MethodGet, "/v1/getBestPath/:truckPlate/:date", nil)
+		req, err := http.NewRequest(http.MethodGet, "/v1/path/:truckPlate/:date", nil)
 		assert.Nil(t, err)
 
 		w := httptest.NewRecorder()
@@ -704,7 +704,7 @@ func TestGetBestPath(t *testing.T) {
 		err = usecase.NewDistribution(newDb, cache, ms).AssignOrdersToTruck(truck.Plate, orderCodeArray)
 		assert.Nil(t, err)
 
-		req, err := http.NewRequest(http.MethodGet, "/v1/getBestPath/:truckPlate/:date", nil)
+		req, err := http.NewRequest(http.MethodGet, "/v1/path/:truckPlate/:date", nil)
 		assert.Nil(t, err)
 
 		w := httptest.NewRecorder()
@@ -788,7 +788,7 @@ func TestGetBestPath(t *testing.T) {
 		err = usecase.NewDistribution(newDb, cache, ms).AssignOrdersToTruck(truck.Plate, orderCodeArray)
 		assert.Nil(t, err)
 
-		req, err := http.NewRequest(http.MethodGet, "/v1/getBestPath/:truckPlate/:date", nil)
+		req, err := http.NewRequest(http.MethodGet, "/v1/path/:truckPlate/:date", nil)
 		assert.Nil(t, err)
 
 		w := httptest.NewRecorder()

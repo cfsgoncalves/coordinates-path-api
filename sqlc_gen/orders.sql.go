@@ -90,3 +90,35 @@ func (q *Queries) ListOrders(ctx context.Context, orderCode string) ([]Order, er
 	}
 	return items, nil
 }
+
+const listOrdersByStatus = `-- name: ListOrdersByStatus :many
+SELECT orders.order_code, weight, latitude, longitude,description FROM orders, order_trucks
+WHERE orders.order_code = order_trucks.order_code AND order_trucks.order_status = $1
+ORDER BY orders.order_code
+`
+
+func (q *Queries) ListOrdersByStatus(ctx context.Context, orderStatus string) ([]Order, error) {
+	rows, err := q.db.Query(ctx, listOrdersByStatus, orderStatus)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Order
+	for rows.Next() {
+		var i Order
+		if err := rows.Scan(
+			&i.OrderCode,
+			&i.Weight,
+			&i.Latitude,
+			&i.Longitude,
+			&i.Description,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -39,3 +39,16 @@ func (o *OrdersAPI) AddNewOrder(c *gin.Context) {
 
 	c.JSON(http.StatusOK, order)
 }
+
+func (o *OrdersAPI) GetOrderByStatus(c *gin.Context) {
+	status, _ := c.Params.Get("truckPlate")
+
+	orders, err := o.Order.GetOrderByStatus(status)
+	if err != nil {
+		log.Error().Msgf("Error getting orders: %v", err)
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, orders)
+}
