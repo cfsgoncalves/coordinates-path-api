@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"meight/configuration"
-	db "meight/db/sqlcgen"
+	"meight/db/db"
 	repositoryImpl "meight/repository/implementation"
 	"meight/usecase"
 	"net/http"

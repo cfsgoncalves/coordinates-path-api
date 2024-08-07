@@ -2,7 +2,7 @@ package api
 
 import (
 	"fmt"
-	db "meight/db/sqlcgen"
+	"meight/db/db"
 	repository "meight/repository/interfaces"
 	"meight/usecase"
 	"net/http"
@@ -29,6 +29,19 @@ func (t *TruckAPI) AddNewTruck(c *gin.Context) {
 	}
 
 	truck, err = t.Truck.AddTruck(&truck)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, fmt.Sprintf("{ Error: %s}", err))
+		return
+	}
+
+	c.JSON(http.StatusOK, truck)
+}
+
+func (t *TruckAPI) GetTruck(c *gin.Context) {
+	plate := c.Param("truckPlate")
+
+	truck, err := t.Truck.GetTruck(plate)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, fmt.Sprintf("{ Error: %s}", err))

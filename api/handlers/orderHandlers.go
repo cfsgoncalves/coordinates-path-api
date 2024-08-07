@@ -1,7 +1,7 @@
 package api
 
 import (
-	db "meight/db/sqlcgen"
+	"meight/db/db"
 	repository "meight/repository/interfaces"
 	"meight/usecase"
 	"net/http"

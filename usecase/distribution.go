@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"meight/configuration"
-	db "meight/db/sqlcgen"
+	"meight/db/db"
 	repositoryInterface "meight/repository/interfaces"
 	"net/http"
 	"slices"

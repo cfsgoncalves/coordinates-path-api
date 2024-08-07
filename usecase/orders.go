@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	db "meight/db/sqlcgen"
+	"meight/db/db"
 	repositoryInterface "meight/repository/interfaces"
 
 	"github.com/jackc/pgx/v5/pgxpool"

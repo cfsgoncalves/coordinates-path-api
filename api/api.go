@@ -9,6 +9,7 @@ import (
 func HTTPRouteEndpoints(router *gin.Engine, system *apiHandlers.SystemMonitoringAPI, distributionApi *apiHandlers.DistributionAPI, truckApi *apiHandlers.TruckAPI, orderApi *apiHandlers.OrdersAPI) *gin.Engine {
 
 	router.POST("/v1/truck", truckApi.AddNewTruck)
+	router.GET("/v1/truck/:truckPlate", truckApi.GetTruck)
 	router.POST("/v1/order", orderApi.AddNewOrder)
 	router.GET("/v1/order", orderApi.ListOrdersToBeAssigned)
 	router.POST("/v1/orderTruck/:truckPlate", distributionApi.AssignOrdersToTruck)
