@@ -1,7 +1,8 @@
 
-# Meight
+# Cordinates path API
 
-A small API to manage trucks and orders and how to track orders that were shipped.
+A small API to manage trucks and orders, and provides the best path based on the orders coordinates. Uses the here API to provide the best path. 
+This project is used to test multiple new technologies in the go community like SQLC, a code generator based on sql queries.
 
 # Architecture
 ![alt text](image-1.png))
